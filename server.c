@@ -13,11 +13,18 @@
   
 // Driver code 
 int main() { 
-    int sockfd; 
+    int sockfd, connfd, len, n; 
     char buffer[MAXLINE]; 
     char *hello = "Hello from server"; 
     struct sockaddr_in servaddr, cliaddr; 
       
+	/* Pre-Probing Phase TCP Connection */
+	
+
+	/* End Pre-Probing Phase TCP Connection */
+
+	/* Probing Phase */
+
     // Creating socket file descriptor 
     if ( (sockfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0 ) { 
         perror("socket creation failed"); 
@@ -28,8 +35,8 @@ int main() {
     memset(&cliaddr, 0, sizeof(cliaddr)); 
       
     // Filling server information 
-    servaddr.sin_family    = AF_INET; // IPv4 
-	servaddr.sin_addr.s_addr = INADDR_ANY; 
+    servaddr.sin_family = AF_INET; // IPv4 
+	servaddr.sin_addr.s_addr = htonl(INADDR_ANY); 
     servaddr.sin_port = htons(PORT); 
       
     // Bind the socket with the server address 
@@ -39,9 +46,7 @@ int main() {
         perror("bind failed"); 
         exit(EXIT_FAILURE); 
     } 
-      
-    int len, n; 
-  
+   
     len = sizeof(cliaddr);  //len is value/resuslt 
   
 	while (1) {
@@ -55,6 +60,8 @@ int main() {
 				len); 
 		printf("Hello message sent.\n");  
 	}
+
+	/* End Probing Phase */
       
     return 0; 
 } 
