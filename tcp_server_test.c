@@ -8,7 +8,7 @@
 #include <unistd.h>
 
 #define MAX 100
-#define PORT 8080 
+#define PORT 8765 
 #define SA struct sockaddr 
 
 
@@ -19,7 +19,7 @@ void sentFile(int sockfd)
 	
 	// create file 
 	FILE *fp;
-	fp=fopen("mysqlScript.txt","r");		// open file uses both stdio and stdin header files
+	fp=fopen("client.c","r");		// open file uses both stdio and stdin header files
 											// file should be present at the program directory
 
 	if( fp == NULL ){

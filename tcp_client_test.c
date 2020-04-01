@@ -9,6 +9,11 @@
 
 #define MAX 100
 #define PORT 8080 
+#define SRC_PORT 9876 
+
+#define DST_PORT 8765 
+#define DST_IP "192.168.56.101"
+
 #define SA struct sockaddr 
 
 void recvFile(int sockfd) 
@@ -16,7 +21,7 @@ void recvFile(int sockfd)
 	char buff[MAX]; 	// to store message from client
 	
 	FILE *fp;
-	fp=fopen("received.txt","w"); // stores the file content in recieved.txt in the program directory
+	fp=fopen("received.c","w"); // stores the file content in recieved.txt in the program directory
 	
 	if( fp == NULL ){
 		printf("Error IN Opening File ");
@@ -49,8 +54,8 @@ int main()
 
 	// assign IP, PORT 
 	servaddr.sin_family = AF_INET; 
-	servaddr.sin_addr.s_addr = inet_addr("127.0.0.1"); 
-	servaddr.sin_port = htons(PORT); 
+	servaddr.sin_addr.s_addr = inet_addr(DST_IP); 
+	servaddr.sin_port = htons(DST_PORT); 
 
 	// connect the client socket to server socket 
 	if (connect(sockfd, (SA*)&servaddr, sizeof(servaddr)) != 0) { 
