@@ -10,46 +10,45 @@
   
 #define PORT    8765
 #define MAXLINE 5000 
-#define MAXFILE 100
+#define MAX 100
 
 void receive_file(int sockfd) {
-	char buff[MAXLINE];
-
+	char buff[MAX]; 	// to store message from client
+	
 	FILE *fp;
-	if ( (fp = fopen("received_config_file.c", "w")) == NULL) {
-		perror("Error in opening file");
-		exit(EXIT_FAILURE);
+	fp=fopen("received.c","w"); // stores the file content in recieved.txt in the program directory
+	
+	if( fp == NULL ){
+		printf("Error IN Opening File ");
+		return ;
 	}
-
-	printf("Start\n");
-	while ( read(sockfd, buff, MAXLINE) > 0) {
-		printf("Start\n");
-		printf("%s\n", buff);
-		fprintf(fp, "%s", buff);
-	}
-
-	fclose(fp);
-	printf("File received.\n");
+	
+	while( read(sockfd,buff,MAX) > 0 )
+		fprintf(fp,"%s",buff);
+	
+	printf("File received successfully !! \n");
+	printf("New File created is received.txt !! \n");
 }
 
 void send_file(int sockfd) {
-	char buff[100];
-
-	FILE *fp;
-	if ( (fp = fopen("client.c", "r")) == NULL) {
-		perror("Error in opening file");
-		exit(EXIT_FAILURE);
-	}
-
-	printf("We started\n");
-	while ( fgets(buff, MAXFILE, fp) != NULL) {
-		printf("%s\n", buff);
-		write(sockfd, buff, sizeof(buff));
-	}
-	printf("We finished\n");
+	char buff[MAX]; 						// for read operation from file and used to sent operation 
 	
-	fclose(fp);
-	printf("File sent.\n");
+	// create file 
+	FILE *fp;
+	fp=fopen("client.c","r");		// open file uses both stdio and stdin header files
+											// file should be present at the program directory
+
+	if( fp == NULL ){
+		printf("Error IN Opening File .. \n");
+		return ;
+	}
+	
+	while ( fgets(buff,MAX,fp) != NULL )	// fgets reads upto MAX character or EOF 
+		write(sockfd,buff,sizeof(buff)); 	// sent the file data to stream
+	
+	fclose (fp);							// close the file 
+	
+	printf("File Sent successfully !!! \n");
 }
   
 // Driver code 
