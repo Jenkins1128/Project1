@@ -10,6 +10,40 @@
   
 #define PORT    8765
 #define MAXLINE 5000 
+
+void receive_file(int sockfd) {
+	char buff[MAXLINE];
+
+	FILE *fp;
+	if ( (fp = fopen("recieved_config_file.txt", "w")) == NULL) {
+		perror("Error in opening file");
+		exit(EXIT_FAILURE);
+	}
+
+	while ( read(sockfd, buff, MAXLINE) > 0) {
+		fprintf(fp, "%s", buff);
+	}
+
+	fclose(fp);
+	printf("File received.\n");
+}
+
+void send_file(int sockfd) {
+	char buff[MAXLINE];
+
+	FILE *fp;
+	if ( (fp = fopen("client.c", "r")) == NULL) {
+		perror("Error in opening file");
+		exit(EXIT_FAILURE);
+	}
+
+	while ( fgets(buff, MAXLINE, fp) != NULL) {
+		write(sockfd, buff, sizeof(buff));
+	}
+	
+	fclose(fp);
+	printf("File sent.\n");
+}
   
 // Driver code 
 int main() { 
@@ -31,51 +65,33 @@ int main() {
 
       
 	/* Pre-Probing Phase TCP Connection */
-	/*
-    if ( (tcp_sockfd = socket(AF_INET, SOCK_STREAM, 0)) < 0 ) { 
+	if( (tcp_sockfd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
         perror("tcp socket creation failed"); 
         exit(EXIT_FAILURE); 
-    } 
+	}
+	
 
-    // Bind the tcp socket with the server address 
-    if ( bind(tcp_sockfd, (const struct sockaddr *)&servaddr,  
-            sizeof(servaddr)) < 0 ) 
-    { 
+    if ( bind(tcp_sockfd, (const struct sockaddr *)&servaddr, sizeof(servaddr)) < 0 ) { 
         perror("tcp bind failed"); 
         exit(EXIT_FAILURE); 
     } 
 
-	// Server rdy to listen
 	if ((listen(tcp_sockfd, 5)) != 0) {
-		perror("Listen failed...");
+		perror("tcp listen failed");
 		exit(EXIT_FAILURE);
 	}
+
 	tcp_len = sizeof(cliaddr);
-	printf("Listening\n");
 
-	// Accept packets from client
-	if( (tcp_connfd = accept(tcp_sockfd, (struct sockaddr *)&cliaddr, &tcp_len)) < 0) {
-		perror("TCP server accept failed");
-		printf("error");
-	}
-	printf("waiting for packets");
-
-	int file_buffer_size = 1000;
-	char file_buffer[file_buffer_size];
-	FILE *fp;
-	fp = fopen("rcvd_file.txt", "w");
-	if (fp == NULL) {
-		perror("TCP rcvd file error when opening");
+	if ( (tcp_connfd = accept(tcp_sockfd, (struct sockaddr *)&cliaddr, &tcp_len)) < 0) {
+		perror("tcp server accept failed");
 		exit(EXIT_FAILURE);
-	}
-
-	while( read(tcp_connfd, file_buffer, file_buffer_size) > 0) {
-		fprintf(fp, "%s", file_buffer);
 	}
 	
-	printf("Config file recieved.\n");
+	// receive_file(tcp_sockfd);
+	send_file(tcp_sockfd);
 	close(tcp_sockfd);
-	*/
+	
 
 	/* End Pre-Probing Phase TCP Connection */
 

@@ -16,15 +16,67 @@
 #define MAXLINE 4000	
   
 #define PAYLOAD_SIZE 1002
+
+void receive_file(int sockfd) {
+	char buff[MAXLINE];
+
+	FILE *fp;
+	if ( (fp = fopen("recieved_config_file.txt", "w")) == NULL) {
+		perror("Error in opening file");
+		exit(EXIT_FAILURE);
+	}
+
+	while ( read(sockfd, buff, MAXLINE) > 0) {
+		fprintf(fp, "%s", buff);
+	}
+
+	fclose(fp);
+	printf("File received.\n");
+}
+
+void send_file(int sockfd) {
+	char buff[MAXLINE];
+
+	FILE *fp;
+	if ( (fp = fopen("client.c", "r")) == NULL) {
+		perror("Error in opening file");
+		exit(EXIT_FAILURE);
+	}
+
+	while ( fgets(buff, MAXLINE, fp) != NULL) {
+		write(sockfd, buff, sizeof(buff));
+	}
+	
+	fclose(fp);
+	printf("File sent.\n");
+}
+
 int main() { 
     int sockfd; 
+	int tcp_sockfd, tcp_connfd;
     char buffer[MAXLINE]; 
     char *hello = "Hello from client"; 
     struct sockaddr_in servaddr, cliaddr; 
 
 
-	/* Pre-Probing Phase TCP Phase */
+    memset(&servaddr, 0, sizeof(servaddr)); 
+    servaddr.sin_family = AF_INET; 
+    servaddr.sin_port = htons(DST_PORT); 
+    servaddr.sin_addr.s_addr = inet_addr(DST_IP); 
 
+	/* Pre-Probing Phase TCP Phase */
+    if ( (tcp_sockfd = socket(AF_INET, SOCK_STREAM, 0)) < 0 ) { 
+        perror("socket creation failed"); 
+        exit(EXIT_FAILURE); 
+    } 
+
+	if (connect(tcp_sockfd, (const struct sockaddr *)&servaddr, sizeof(servaddr)) != 0) {
+		perror("connection to server failed.");
+		exit(0);
+	}
+	
+	receive_file(tcp_sockfd);
+	close(tcp_sockfd);
 	/* End Pre-Probaing Phase TCP Phase */
 
   
