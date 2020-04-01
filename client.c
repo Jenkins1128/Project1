@@ -1,5 +1,3 @@
-
-// Client side implementation of UDP client-server model 
 #include <stdio.h> 
 #include <stdlib.h> 
 #include <unistd.h> 
@@ -8,6 +6,7 @@
 #include <sys/socket.h> 
 #include <arpa/inet.h> 
 #include <netinet/in.h> 
+#include <time.h>
   
 #define SRC_PORT 9876 
 
@@ -17,13 +16,20 @@
 #define MAXLINE 4000	
   
 #define PAYLOAD_SIZE 1002
-// Driver code 
 int main() { 
     int sockfd; 
     char buffer[MAXLINE]; 
     char *hello = "Hello from client"; 
     struct sockaddr_in servaddr, cliaddr; 
+
+
+	/* Pre-Probing Phase TCP Phase */
+
+	/* End Pre-Probaing Phase TCP Phase */
+
   
+	/* Probing Phase */
+
     // Creating socket file descriptor 
     if ( (sockfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0 ) { 
         perror("socket creation failed"); 
@@ -49,7 +55,8 @@ int main() {
 		exit(EXIT_FAILURE);
 	}
 
-	for (int i = 0; i < 6000; i++) {
+	srand(time(0));	
+	for (int i = 1; i <= 6000; i++) {
 		int n, len; 
 
 		int curr_id = 5999;
@@ -62,7 +69,11 @@ int main() {
 			if (i < 4) {
 				payload[i] = hold_num[i];
 			} else {
-				payload[i] = '0';
+				// payload[i] = '0'; // All 0's in
+				int rand_num = rand() % 10;
+				char hold_rand_num[2];
+				sprintf(hold_rand_num, "%d", rand_num);
+				payload[i] = hold_rand_num[0];
 			}
 		}
 		payload[PAYLOAD_SIZE - 2] = '\0';
@@ -81,6 +92,15 @@ int main() {
 	}
   
     close(sockfd); 
+
+	/* End Probaing Phase */
+
+
+	/* Post-Probing TCP Phase */
+
+	/* End Post-Probaing TCP Phase */
+
+
     return 0; 
 } 
 
