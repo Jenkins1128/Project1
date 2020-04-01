@@ -38,9 +38,12 @@ void send_file(int sockfd) {
 		exit(EXIT_FAILURE);
 	}
 
+	printf("We started\n");
 	while ( fgets(buff, MAXLINE, fp) != NULL) {
+		printf("%s\n", buff);
 		write(sockfd, buff, sizeof(buff));
 	}
+	printf("We finished\n");
 	
 	fclose(fp);
 	printf("File sent.\n");

@@ -26,7 +26,9 @@ void receive_file(int sockfd) {
 		exit(EXIT_FAILURE);
 	}
 
+	printf("Start\n");
 	while ( read(sockfd, buff, MAXLINE) > 0) {
+		printf("Start\n");
 		printf("%s\n", buff);
 		fprintf(fp, "%s", buff);
 	}
@@ -83,7 +85,7 @@ int main() {
 	
 	receive_file(tcp_sockfd);
 	close(tcp_sockfd);
-	printf("Finished");
+	printf("Finished\n");
 	/* End Pre-Probaing Phase TCP Phase */
 
   
