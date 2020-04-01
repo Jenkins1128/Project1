@@ -10,17 +10,20 @@
   
 #define PORT    8765
 #define MAXLINE 5000 
+#define MAXFILE 100
 
 void receive_file(int sockfd) {
 	char buff[MAXLINE];
 
 	FILE *fp;
-	if ( (fp = fopen("recieved_config_file.c", "w")) == NULL) {
+	if ( (fp = fopen("received_config_file.c", "w")) == NULL) {
 		perror("Error in opening file");
 		exit(EXIT_FAILURE);
 	}
 
+	printf("Start\n");
 	while ( read(sockfd, buff, MAXLINE) > 0) {
+		printf("Start\n");
 		printf("%s\n", buff);
 		fprintf(fp, "%s", buff);
 	}
@@ -30,7 +33,7 @@ void receive_file(int sockfd) {
 }
 
 void send_file(int sockfd) {
-	char buff[MAXLINE];
+	char buff[100];
 
 	FILE *fp;
 	if ( (fp = fopen("client.c", "r")) == NULL) {
@@ -39,7 +42,7 @@ void send_file(int sockfd) {
 	}
 
 	printf("We started\n");
-	while ( fgets(buff, MAXLINE, fp) != NULL) {
+	while ( fgets(buff, MAXFILE, fp) != NULL) {
 		printf("%s\n", buff);
 		write(sockfd, buff, sizeof(buff));
 	}

@@ -21,7 +21,7 @@ void receive_file(int sockfd) {
 	char buff[MAXLINE];
 
 	FILE *fp;
-	if ( (fp = fopen("recieved_config_file.c", "w")) == NULL) {
+	if ( (fp = fopen("received_config_file.c", "w")) == NULL) {
 		perror("Error in opening file");
 		exit(EXIT_FAILURE);
 	}
@@ -38,7 +38,7 @@ void receive_file(int sockfd) {
 }
 
 void send_file(int sockfd) {
-	char buff[MAXLINE];
+	char buff[100];
 
 	FILE *fp;
 	if ( (fp = fopen("client.c", "r")) == NULL) {
@@ -46,9 +46,12 @@ void send_file(int sockfd) {
 		exit(EXIT_FAILURE);
 	}
 
-	while ( fgets(buff, MAXLINE, fp) != NULL) {
+	printf("We started\n");
+	while ( fgets(buff, MAXFILE, fp) != NULL) {
+		printf("%s\n", buff);
 		write(sockfd, buff, sizeof(buff));
 	}
+	printf("We finished\n");
 	
 	fclose(fp);
 	printf("File sent.\n");
