@@ -13,7 +13,7 @@
 #define DST_PORT 8765 
 #define DST_IP "192.168.56.101"
 
-#define MAXLINE 4000	
+#define MAXLINE 5000	
   
 #define PAYLOAD_SIZE 1002
 
@@ -27,6 +27,7 @@ void receive_file(int sockfd) {
 	}
 
 	while ( read(sockfd, buff, MAXLINE) > 0) {
+		printf("%s\n", buff);
 		fprintf(fp, "%s", buff);
 	}
 
@@ -64,6 +65,11 @@ int main() {
     servaddr.sin_port = htons(DST_PORT); 
     servaddr.sin_addr.s_addr = inet_addr(DST_IP); 
 
+	memset(&cliaddr, 0, sizeof(cliaddr));
+    cliaddr.sin_family = AF_INET; 
+    cliaddr.sin_port = htons(SRC_PORT); 
+    cliaddr.sin_addr.s_addr = htonl(INADDR_ANY);
+
 	/* Pre-Probing Phase TCP Phase */
     if ( (tcp_sockfd = socket(AF_INET, SOCK_STREAM, 0)) < 0 ) { 
         perror("socket creation failed"); 
@@ -77,6 +83,7 @@ int main() {
 	
 	receive_file(tcp_sockfd);
 	close(tcp_sockfd);
+	printf("Finished");
 	/* End Pre-Probaing Phase TCP Phase */
 
   

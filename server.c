@@ -21,6 +21,7 @@ void receive_file(int sockfd) {
 	}
 
 	while ( read(sockfd, buff, MAXLINE) > 0) {
+		printf("%s\n", buff);
 		fprintf(fp, "%s", buff);
 	}
 
