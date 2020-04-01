@@ -15,7 +15,7 @@ void receive_file(int sockfd) {
 	char buff[MAXLINE];
 
 	FILE *fp;
-	if ( (fp = fopen("recieved_config_file.txt", "w")) == NULL) {
+	if ( (fp = fopen("recieved_config_file.c", "w")) == NULL) {
 		perror("Error in opening file");
 		exit(EXIT_FAILURE);
 	}
