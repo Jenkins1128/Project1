@@ -14,6 +14,7 @@
 #define DST_IP "192.168.56.101"
 
 #define MAXLINE 5000	
+#define MAXFILE 100
   
 #define PAYLOAD_SIZE 1002
 
