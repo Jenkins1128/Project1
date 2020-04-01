@@ -65,10 +65,6 @@ int main() {
     struct sockaddr_in servaddr, cliaddr; 
 
 
-    memset(&servaddr, 0, sizeof(servaddr)); 
-    servaddr.sin_family = AF_INET; 
-    servaddr.sin_port = htons(DST_PORT); 
-    servaddr.sin_addr.s_addr = inet_addr(DST_IP); 
 
 	memset(&cliaddr, 0, sizeof(cliaddr));
     cliaddr.sin_family = AF_INET; 
@@ -81,13 +77,18 @@ int main() {
         exit(EXIT_FAILURE); 
     } 
 
+    memset(&servaddr, 0, sizeof(servaddr)); 
+    servaddr.sin_family = AF_INET; 
+    servaddr.sin_port = htons(DST_PORT); 
+    servaddr.sin_addr.s_addr = inet_addr(DST_IP); 
+
 	if (connect(tcp_sockfd, (const struct sockaddr *)&servaddr, sizeof(servaddr)) != 0) {
 		perror("connection to server failed.");
 		exit(0);
 	}
 	
 	receive_file(tcp_sockfd);
-	// close(tcp_sockfd);
+	close(tcp_sockfd);
 	printf("Finished\n");
 	/* End Pre-Probaing Phase TCP Phase */
 

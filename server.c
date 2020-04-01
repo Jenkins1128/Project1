@@ -61,13 +61,14 @@ int main() {
     char *hello = "Hello from server"; 
     struct sockaddr_in servaddr, cliaddr; 
 
+	/*
     memset(&servaddr, 0, sizeof(servaddr)); 
-    memset(&cliaddr, 0, sizeof(cliaddr)); 
 
     // Filling server information 
     servaddr.sin_family = AF_INET; // IPv4 
 	servaddr.sin_addr.s_addr = htonl(INADDR_ANY); 
     servaddr.sin_port = htons(PORT); 
+	*/
 
       
 	/* Pre-Probing Phase TCP Connection */
@@ -76,8 +77,14 @@ int main() {
         exit(EXIT_FAILURE); 
 	}
 	
+    memset(&servaddr, 0, sizeof(servaddr)); 
 
-    if ( bind(tcp_sockfd, (const struct sockaddr *)&servaddr, sizeof(servaddr)) < 0 ) { 
+    // Filling server information 
+    servaddr.sin_family = AF_INET; // IPv4 
+	servaddr.sin_addr.s_addr = htonl(INADDR_ANY); 
+    servaddr.sin_port = htons(PORT); 
+
+    if ( bind(tcp_sockfd, (struct sockaddr *)&servaddr, sizeof(servaddr)) < 0 ) { 
         perror("tcp bind failed"); 
         exit(EXIT_FAILURE); 
     } 
