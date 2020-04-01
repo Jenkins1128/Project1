@@ -21,16 +21,17 @@ int main() {
     char *hello = "Hello from server"; 
     struct sockaddr_in servaddr, cliaddr; 
 
+    memset(&servaddr, 0, sizeof(servaddr)); 
+    memset(&cliaddr, 0, sizeof(cliaddr)); 
 
     // Filling server information 
     servaddr.sin_family = AF_INET; // IPv4 
 	servaddr.sin_addr.s_addr = htonl(INADDR_ANY); 
     servaddr.sin_port = htons(PORT); 
 
-    memset(&servaddr, 0, sizeof(servaddr)); 
-    memset(&cliaddr, 0, sizeof(cliaddr)); 
       
 	/* Pre-Probing Phase TCP Connection */
+	/*
     if ( (tcp_sockfd = socket(AF_INET, SOCK_STREAM, 0)) < 0 ) { 
         perror("tcp socket creation failed"); 
         exit(EXIT_FAILURE); 
@@ -50,11 +51,14 @@ int main() {
 		exit(EXIT_FAILURE);
 	}
 	tcp_len = sizeof(cliaddr);
+	printf("Listening\n");
 
 	// Accept packets from client
 	if( (tcp_connfd = accept(tcp_sockfd, (struct sockaddr *)&cliaddr, &tcp_len)) < 0) {
 		perror("TCP server accept failed");
+		printf("error");
 	}
+	printf("waiting for packets");
 
 	int file_buffer_size = 1000;
 	char file_buffer[file_buffer_size];
@@ -71,6 +75,7 @@ int main() {
 	
 	printf("Config file recieved.\n");
 	close(tcp_sockfd);
+	*/
 
 	/* End Pre-Probing Phase TCP Connection */
 
