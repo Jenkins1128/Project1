@@ -88,7 +88,7 @@ int main() {
 	}
 	
 	receive_file(tcp_sockfd);
-	close(tcp_sockfd);
+	// close(tcp_sockfd);
 	printf("Finished\n");
 	/* End Pre-Probaing Phase TCP Phase */
 
