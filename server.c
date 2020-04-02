@@ -156,20 +156,75 @@ void probe_serv() {
 					&udp_len); 
 		buffer[udp_rcvd] = '\0'; 
 		printf("Client : %s\n", buffer); 
-		/*
-		sendto(udp_sockfd, (const char *)hello, strlen(hello),  
-			MSG_CONFIRM, (const struct sockaddr *) &cliaddr, 
-				udp_len); 
-		*/
 	}
     int close_return = close(udp_sockfd); 
 	printf("close_return: %d\n", close_return);
 	return;
+}
+
+void post_probe_serv() {
+	int sockfd, connfd, len; 				// create socket file descriptor 
+	struct sockaddr_in servaddr, cli; 		// create structure object of sockaddr_in for client and server
+
+	// socket create and verification 
+	sockfd = socket(AF_INET, SOCK_STREAM, 0); 			// creating a TCP socket ( SOCK_STREAM )
+	
+	if (sockfd == -1) { 
+		printf("socket creation failed...\n"); 
+		exit(0); 
+	} 
+	else
+		printf("Socket successfully created..\n"); 
+	
+	// empty the 
+	bzero(&servaddr, sizeof(servaddr)); 
+
+	// assign IP, PORT 
+	servaddr.sin_family = AF_INET;					// specifies address family with IPv4 Protocol 
+	servaddr.sin_addr.s_addr = htonl(INADDR_ANY); 	// binds to any address
+	servaddr.sin_port = htons(TCP_PORT); 				// binds to PORT specified
+
+	// Binding newly created socket to given IP and verification 
+	if ((bind(sockfd, (SA*)&servaddr, sizeof(servaddr))) != 0) { 
+		printf("socket bind failed...\n"); 
+		exit(0); 
+	} 
+	else
+		printf("Socket successfully binded..\n"); 
+
+	// Now server is ready to listen and verification 
+	if ((listen(sockfd, 5)) != 0) { 
+		printf("Listen failed...\n"); 
+		exit(0); 
+	} 
+	else
+		printf("Server listening..\n"); 
+	
+	len = sizeof(cli); 
+
+	// Accept the data packet from client and verification 
+	connfd = accept(sockfd, (SA*)&cli, &len); 	// accepts connection from socket
+	
+	if (connfd < 0) { 
+		printf("server acccept failed...\n"); 
+		exit(0); 
+	} 
+	else
+		printf("server acccept the client...\n"); 
+
+	// TODO Send findings to client
+
+	// After transfer close the socket 
+	int return_value = close(sockfd); 
+	printf("return:value:%d\n", return_value);
+	return;
+
 }
   
 // Driver code 
 int main() { 
 	pre_probe_server();
 	probe_serv();
+	post_probe_serv();
     return 0; 
 }

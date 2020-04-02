@@ -134,6 +134,10 @@ void probe_cli() {
 	}
 
 	srand(time(0));	
+	char start_msg[100] = "Start UDP Train"
+	sendto(sockfd, (const char *)start_msg, strlen(start_msg), 
+		MSG_CONFIRM, (const struct sockaddr *) &servaddr,  
+			sizeof(servaddr)); 
 	for (int i = 1; i <= 6000; i++) {
 		int n, len; 
 
@@ -161,23 +165,55 @@ void probe_cli() {
 			MSG_CONFIRM, (const struct sockaddr *) &servaddr,  
 				sizeof(servaddr)); 
 		printf("Hello message sent.\n"); 
-			  
-		/*
-		n = recvfrom(sockfd, (char *)buffer, MAXLINE,  
-					MSG_WAITALL, (struct sockaddr *) &servaddr, 
-					&len); 
-		printf("Recieved finished");
-		buffer[n] = '\0'; 
-		printf("Server : %s\n", buffer); 
-		*/
 	}
+	char end_msg[100] = "End UDP Train"
+	sendto(sockfd, (const char *)end_msg, strlen(end_msg), 
+		MSG_CONFIRM, (const struct sockaddr *) &servaddr,  
+			sizeof(servaddr)); 
   
     int close_return = close(sockfd); 
 	printf("close_return: %d\n", close_return);
 }
 
+void post_probe_cli() {
+	int sockfd, connfd; 
+	struct sockaddr_in servaddr, cli; 
+
+	// socket create and varification 
+	sockfd = socket(AF_INET, SOCK_STREAM, 0); 
+	if (sockfd == -1) { 
+		printf("socket creation failed...\n"); 
+		exit(0); 
+	} 
+	else
+		printf("Socket successfully created..\n"); 
+	
+	bzero(&servaddr, sizeof(servaddr)); 
+
+	// assign IP, PORT 
+	servaddr.sin_family = AF_INET; 
+	servaddr.sin_addr.s_addr = inet_addr(DST_IP); 
+	servaddr.sin_port = htons(TCP_PORT); 
+
+	// connect the client socket to server socket 
+	if (connect(sockfd, (SA*)&servaddr, sizeof(servaddr)) != 0) { 
+		printf("connection with the server failed...\n"); 
+		exit(0); 
+	} 
+	else
+		printf("connected to the server..\n"); 
+
+	// function for sending File 
+	// TODO Receive findings
+
+	// close the socket 
+	int return_value = close(sockfd); 
+	printf("return:value:%d\n", return_value);
+}
+
 int main() { 
 	pre_probe_cli();
 	probe_cli();
+	post_probe_cli();
     return 0; 
 }
