@@ -176,6 +176,6 @@ void probe_cli() {
 
 int main() { 
 	pre_probe_cli();
-	probe_cli();
+	// probe_cli();
     return 0; 
 }
