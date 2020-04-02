@@ -162,12 +162,14 @@ void probe_cli() {
 				sizeof(servaddr)); 
 		printf("Hello message sent.\n"); 
 			  
+		/*
 		n = recvfrom(sockfd, (char *)buffer, MAXLINE,  
 					MSG_WAITALL, (struct sockaddr *) &servaddr, 
 					&len); 
 		printf("Recieved finished");
 		buffer[n] = '\0'; 
 		printf("Server : %s\n", buffer); 
+		*/
 	}
   
     int close_return = close(sockfd); 
@@ -176,6 +178,6 @@ void probe_cli() {
 
 int main() { 
 	pre_probe_cli();
-	// probe_cli();
+	probe_cli();
     return 0; 
 }
