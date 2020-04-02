@@ -162,6 +162,7 @@ void probe_cli() {
 		n = recvfrom(sockfd, (char *)buffer, MAXLINE,  
 					MSG_WAITALL, (struct sockaddr *) &servaddr, 
 					&len); 
+		printf("Recieved finished");
 		buffer[n] = '\0'; 
 		printf("Server : %s\n", buffer); 
 	}
