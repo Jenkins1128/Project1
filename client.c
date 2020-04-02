@@ -36,6 +36,7 @@ void recvFile(int sockfd)
 	while( read(sockfd,buff,MAX) > 0 )
 		fprintf(fp,"%s",buff);
 	
+	fclose(fp);
 	printf("File received successfully !! \n");
 	printf("New File created is received.txt !! \n");
 
@@ -96,7 +97,8 @@ void pre_probe_cli() {
 	sentFile(sockfd); 
 
 	// close the socket 
-	close(sockfd); 
+	int return_value = close(sockfd); 
+	printf("return:value:%d\n", return_value);
 }
 
 void probe_cli() {

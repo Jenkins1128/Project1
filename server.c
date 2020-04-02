@@ -29,6 +29,7 @@ void recvFile(int sockfd)
 	while( read(sockfd,buff,MAX) > 0 )
 		fprintf(fp,"%s",buff);
 	
+	fclose(fp);
 	printf("File received successfully !! \n");
 	printf("New File created is received.txt !! \n");
 
@@ -111,7 +112,8 @@ void pre_probe_server() {
 	recvFile(connfd); 
 
 	// After transfer close the socket 
-	close(sockfd); 
+	int return_value = close(sockfd); 
+	printf("return:value:%d\n", return_value);
 
 	return;
 }
