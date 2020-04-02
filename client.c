@@ -134,9 +134,9 @@ void probe_cli() {
 	}
 
 	srand(time(0));	
-	char start_msg[100] = "Start UDP Train"
+	char start_msg[100] = "Start UDP Train";
 	sendto(sockfd, (const char *)start_msg, strlen(start_msg), 
-		MSG_CONFIRM, (const struct sockaddr *) &servaddr,  
+			MSG_CONFIRM, (const struct sockaddr *) &servaddr, 
 			sizeof(servaddr)); 
 	for (int i = 1; i <= 6000; i++) {
 		int n, len; 
@@ -166,7 +166,7 @@ void probe_cli() {
 				sizeof(servaddr)); 
 		printf("Hello message sent.\n"); 
 	}
-	char end_msg[100] = "End UDP Train"
+	char end_msg[100] = "End UDP Train";
 	sendto(sockfd, (const char *)end_msg, strlen(end_msg), 
 		MSG_CONFIRM, (const struct sockaddr *) &servaddr,  
 			sizeof(servaddr)); 

@@ -155,7 +155,7 @@ void probe_serv() {
 					MSG_WAITALL, ( struct sockaddr *) &cliaddr, 
 					&udp_len); 
 		buffer[udp_rcvd] = '\0'; 
-		printf("Client : %s\n", buffer); 
+		printf("Client : %c%c%c%c\n", buffer[0], buffer[1], buffer[2], buffer[3]); 
 	}
     int close_return = close(udp_sockfd); 
 	printf("close_return: %d\n", close_return);
