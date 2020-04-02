@@ -150,7 +150,7 @@ void probe_serv() {
 	int j = 0;
 	while (j < 5999) {
 		j = j + 1;
-		printf("Waiting...\n");
+		printf("Waiting...%d\n", j);
 		udp_rcvd = recvfrom(udp_sockfd, (char *)buffer, MAXLINE,  
 					MSG_WAITALL, ( struct sockaddr *) &cliaddr, 
 					&udp_len); 
