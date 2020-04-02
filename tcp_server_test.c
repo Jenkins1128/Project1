@@ -12,6 +12,25 @@
 #define SA struct sockaddr 
 
 
+void recvFile(int sockfd) 
+{ 
+	char buff[MAX]; 	// to store message from client
+	
+	FILE *fp;
+	fp=fopen("received.c","w"); // stores the file content in recieved.txt in the program directory
+	
+	if( fp == NULL ){
+		printf("Error IN Opening File ");
+		return ;
+	}
+	
+	while( read(sockfd,buff,MAX) > 0 )
+		fprintf(fp,"%s",buff);
+	
+	printf("File received successfully !! \n");
+	printf("New File created is received.txt !! \n");
+
+} 
 
 void sentFile(int sockfd) 
 { 
@@ -89,7 +108,7 @@ int main()
 		printf("server acccept the client...\n"); 
 
 	// Function for chatting between client and server 
-	sentFile(connfd); 
+	recvFile(connfd); 
 
 	// After transfer close the socket 
 	close(sockfd); 
