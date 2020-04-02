@@ -8,10 +8,10 @@
 #include <netinet/in.h> 
 #include <time.h>
   
-#define SRC_PORT 9877 
+#define SRC_PORT 9876 
 
-#define DST_PORT 8766 
-#define TCP_PORT 8081
+#define DST_PORT 8765 
+#define TCP_PORT 8080
 #define DST_IP "192.168.56.101"
 
 #define MAXLINE 5000	
