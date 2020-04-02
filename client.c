@@ -11,6 +11,7 @@
 #define SRC_PORT 9876 
 
 #define DST_PORT 8765 
+#define TCP_PORT 8080
 #define DST_IP "192.168.56.101"
 
 #define MAXLINE 5000	
@@ -81,7 +82,7 @@ void pre_probe_cli() {
 	// assign IP, PORT 
 	servaddr.sin_family = AF_INET; 
 	servaddr.sin_addr.s_addr = inet_addr(DST_IP); 
-	servaddr.sin_port = htons(DST_PORT); 
+	servaddr.sin_port = htons(TCP_PORT); 
 
 	// connect the client socket to server socket 
 	if (connect(sockfd, (SA*)&servaddr, sizeof(servaddr)) != 0) { 

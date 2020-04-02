@@ -9,6 +9,7 @@
 #include <netinet/in.h> 
   
 #define PORT    8765
+#define TCP_PORT 8080
 #define MAXLINE 6000 
 #define MAX 100
 #define SA struct sockaddr 
@@ -76,7 +77,7 @@ void pre_probe_server() {
 	// assign IP, PORT 
 	servaddr.sin_family = AF_INET;					// specifies address family with IPv4 Protocol 
 	servaddr.sin_addr.s_addr = htonl(INADDR_ANY); 	// binds to any address
-	servaddr.sin_port = htons(PORT); 				// binds to PORT specified
+	servaddr.sin_port = htons(TCP_PORT); 				// binds to PORT specified
 
 	// Binding newly created socket to given IP and verification 
 	if ((bind(sockfd, (SA*)&servaddr, sizeof(servaddr))) != 0) { 
