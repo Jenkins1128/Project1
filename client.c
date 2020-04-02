@@ -98,26 +98,12 @@ void pre_probe_cli() {
 	close(sockfd); 
 }
 
-int main() { 
+void probe_cli() {
     int sockfd; 
 	int tcp_sockfd, tcp_connfd;
     char buffer[MAXLINE]; 
     char *hello = "Hello from client"; 
     struct sockaddr_in servaddr, cliaddr; 
-
-
-
-	memset(&cliaddr, 0, sizeof(cliaddr));
-    cliaddr.sin_family = AF_INET; 
-    cliaddr.sin_port = htons(SRC_PORT); 
-    cliaddr.sin_addr.s_addr = htonl(INADDR_ANY);
-
-	/* Pre-Probing Phase TCP Phase */
-	pre_probe_cli();
-	/* End Pre-Probaing Phase TCP Phase */
-
-  
-	/* Probing Phase */
 
     // Creating socket file descriptor 
     if ( (sockfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0 ) { 
@@ -181,15 +167,12 @@ int main() {
 	}
   
     close(sockfd); 
+}
 
-	/* End Probaing Phase */
+int main() { 
 
-
-	/* Post-Probing TCP Phase */
-
-	/* End Post-Probaing TCP Phase */
-
-
+	// pre_probe_cli();
+	probe_cli();
     return 0; 
 } 
 

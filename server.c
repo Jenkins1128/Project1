@@ -113,12 +113,8 @@ void pre_probe_server() {
 	close(sockfd); 
 
 }
-  
-// Driver code 
-int main() { 
-	// TCP Stuff
-	int tcp_sockfd, tcp_connfd, tcp_len;
-	// UDP Stuff
+
+void probe_serv() {
     int udp_sockfd, udp_len, udp_rcvd; 
     char buffer[MAXLINE]; 
     char *hello = "Hello from server"; 
@@ -130,18 +126,6 @@ int main() {
     servaddr.sin_family = AF_INET; // IPv4 
 	servaddr.sin_addr.s_addr = htonl(INADDR_ANY); 
     servaddr.sin_port = htons(PORT); 
-
-      
-	/* Pre-Probing Phase TCP Connection */
-	pre_probe_server();
-	/* End Pre-Probing Phase TCP Connection */
-
-
-
-
-	/* Probing Phase */
-
-    // Creating udp socket file descriptor 
     if ( (udp_sockfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0 ) { 
         perror("udp socket creation failed"); 
         exit(EXIT_FAILURE); 
@@ -170,16 +154,12 @@ int main() {
 				udp_len); 
 		printf("Hello message sent.\n");  
 	}
-
-	/* End Probing Phase */
-
-
-
-	/* Post-Probing Phase TCP Connection */
-
-
-	/* End Post-Probing Phase TCP Connection */
-      
+}
+  
+// Driver code 
+int main() { 
+	// pre_probe_server();
+	probe_serv();
     return 0; 
 } 
 
