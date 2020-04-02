@@ -159,6 +159,8 @@ void probe_serv() {
 				udp_len); 
 		printf("Hello message sent.\n");  
 	}
+    int close_return = close(udp_sockfd); 
+	printf("close_return: %d\n", close_return);
 	return;
 }
   
