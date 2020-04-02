@@ -9,7 +9,7 @@
 #include <netinet/in.h> 
   
 #define PORT    8765
-#define MAXLINE 5000 
+#define MAXLINE 6000 
 #define MAX 100
 #define SA struct sockaddr 
 
@@ -112,6 +112,7 @@ void pre_probe_server() {
 	// After transfer close the socket 
 	close(sockfd); 
 
+	return;
 }
 
 void probe_serv() {
@@ -155,6 +156,7 @@ void probe_serv() {
 				udp_len); 
 		printf("Hello message sent.\n");  
 	}
+	return;
 }
   
 // Driver code 
