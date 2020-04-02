@@ -11,8 +11,10 @@
 #define PORT    8765
 #define MAXLINE 5000 
 #define MAX 100
+#define SA struct sockaddr 
 
-void receive_file(int sockfd) {
+void recvFile(int sockfd) 
+{ 
 	char buff[MAX]; 	// to store message from client
 	
 	FILE *fp;
@@ -28,9 +30,11 @@ void receive_file(int sockfd) {
 	
 	printf("File received successfully !! \n");
 	printf("New File created is received.txt !! \n");
-}
 
-void send_file(int sockfd) {
+} 
+
+void sentFile(int sockfd) 
+{ 
 	char buff[MAX]; 						// for read operation from file and used to sent operation 
 	
 	// create file 
@@ -49,6 +53,65 @@ void send_file(int sockfd) {
 	fclose (fp);							// close the file 
 	
 	printf("File Sent successfully !!! \n");
+	
+} 
+
+void pre_probe_server() {
+	int sockfd, connfd, len; 				// create socket file descriptor 
+	struct sockaddr_in servaddr, cli; 		// create structure object of sockaddr_in for client and server
+
+	// socket create and verification 
+	sockfd = socket(AF_INET, SOCK_STREAM, 0); 			// creating a TCP socket ( SOCK_STREAM )
+	
+	if (sockfd == -1) { 
+		printf("socket creation failed...\n"); 
+		exit(0); 
+	} 
+	else
+		printf("Socket successfully created..\n"); 
+	
+	// empty the 
+	bzero(&servaddr, sizeof(servaddr)); 
+
+	// assign IP, PORT 
+	servaddr.sin_family = AF_INET;					// specifies address family with IPv4 Protocol 
+	servaddr.sin_addr.s_addr = htonl(INADDR_ANY); 	// binds to any address
+	servaddr.sin_port = htons(PORT); 				// binds to PORT specified
+
+	// Binding newly created socket to given IP and verification 
+	if ((bind(sockfd, (SA*)&servaddr, sizeof(servaddr))) != 0) { 
+		printf("socket bind failed...\n"); 
+		exit(0); 
+	} 
+	else
+		printf("Socket successfully binded..\n"); 
+
+	// Now server is ready to listen and verification 
+	if ((listen(sockfd, 5)) != 0) { 
+		printf("Listen failed...\n"); 
+		exit(0); 
+	} 
+	else
+		printf("Server listening..\n"); 
+	
+	len = sizeof(cli); 
+
+	// Accept the data packet from client and verification 
+	connfd = accept(sockfd, (SA*)&cli, &len); 	// accepts connection from socket
+	
+	if (connfd < 0) { 
+		printf("server acccept failed...\n"); 
+		exit(0); 
+	} 
+	else
+		printf("server acccept the client...\n"); 
+
+	// Function for chatting between client and server 
+	recvFile(connfd); 
+
+	// After transfer close the socket 
+	close(sockfd); 
+
 }
   
 // Driver code 
@@ -61,51 +124,16 @@ int main() {
     char *hello = "Hello from server"; 
     struct sockaddr_in servaddr, cliaddr; 
 
-	/*
     memset(&servaddr, 0, sizeof(servaddr)); 
 
     // Filling server information 
     servaddr.sin_family = AF_INET; // IPv4 
 	servaddr.sin_addr.s_addr = htonl(INADDR_ANY); 
     servaddr.sin_port = htons(PORT); 
-	*/
 
       
 	/* Pre-Probing Phase TCP Connection */
-	if( (tcp_sockfd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
-        perror("tcp socket creation failed"); 
-        exit(EXIT_FAILURE); 
-	}
-	
-    memset(&servaddr, 0, sizeof(servaddr)); 
-
-    // Filling server information 
-    servaddr.sin_family = AF_INET; // IPv4 
-	servaddr.sin_addr.s_addr = htonl(INADDR_ANY); 
-    servaddr.sin_port = htons(PORT); 
-
-    if ( bind(tcp_sockfd, (struct sockaddr *)&servaddr, sizeof(servaddr)) < 0 ) { 
-        perror("tcp bind failed"); 
-        exit(EXIT_FAILURE); 
-    } 
-
-	if ((listen(tcp_sockfd, 5)) != 0) {
-		perror("tcp listen failed");
-		exit(EXIT_FAILURE);
-	}
-
-	tcp_len = sizeof(cliaddr);
-
-	if ( (tcp_connfd = accept(tcp_sockfd, (struct sockaddr *)&cliaddr, &tcp_len)) < 0) {
-		perror("tcp server accept failed");
-		exit(EXIT_FAILURE);
-	}
-	
-	// receive_file(tcp_sockfd);
-	send_file(tcp_sockfd);
-	close(tcp_sockfd);
-	
-
+	pre_probe_server();
 	/* End Pre-Probing Phase TCP Connection */
 
 

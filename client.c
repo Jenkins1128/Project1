@@ -17,8 +17,11 @@
 #define MAX 100
   
 #define PAYLOAD_SIZE 1002
+#define SA struct sockaddr 
 
-void receive_file(int sockfd) {
+
+void recvFile(int sockfd) 
+{ 
 	char buff[MAX]; 	// to store message from client
 	
 	FILE *fp;
@@ -34,9 +37,11 @@ void receive_file(int sockfd) {
 	
 	printf("File received successfully !! \n");
 	printf("New File created is received.txt !! \n");
-}
 
-void send_file(int sockfd) {
+} 
+
+void sentFile(int sockfd) 
+{ 
 	char buff[MAX]; 						// for read operation from file and used to sent operation 
 	
 	// create file 
@@ -55,6 +60,42 @@ void send_file(int sockfd) {
 	fclose (fp);							// close the file 
 	
 	printf("File Sent successfully !!! \n");
+	
+} 
+
+void pre_probe_cli() {
+	int sockfd, connfd; 
+	struct sockaddr_in servaddr, cli; 
+
+	// socket create and varification 
+	sockfd = socket(AF_INET, SOCK_STREAM, 0); 
+	if (sockfd == -1) { 
+		printf("socket creation failed...\n"); 
+		exit(0); 
+	} 
+	else
+		printf("Socket successfully created..\n"); 
+	
+	bzero(&servaddr, sizeof(servaddr)); 
+
+	// assign IP, PORT 
+	servaddr.sin_family = AF_INET; 
+	servaddr.sin_addr.s_addr = inet_addr(DST_IP); 
+	servaddr.sin_port = htons(DST_PORT); 
+
+	// connect the client socket to server socket 
+	if (connect(sockfd, (SA*)&servaddr, sizeof(servaddr)) != 0) { 
+		printf("connection with the server failed...\n"); 
+		exit(0); 
+	} 
+	else
+		printf("connected to the server..\n"); 
+
+	// function for sending File 
+	sentFile(sockfd); 
+
+	// close the socket 
+	close(sockfd); 
 }
 
 int main() { 
@@ -72,24 +113,7 @@ int main() {
     cliaddr.sin_addr.s_addr = htonl(INADDR_ANY);
 
 	/* Pre-Probing Phase TCP Phase */
-    if ( (tcp_sockfd = socket(AF_INET, SOCK_STREAM, 0)) < 0 ) { 
-        perror("socket creation failed"); 
-        exit(EXIT_FAILURE); 
-    } 
-
-    memset(&servaddr, 0, sizeof(servaddr)); 
-    servaddr.sin_family = AF_INET; 
-    servaddr.sin_port = htons(DST_PORT); 
-    servaddr.sin_addr.s_addr = inet_addr(DST_IP); 
-
-	if (connect(tcp_sockfd, (const struct sockaddr *)&servaddr, sizeof(servaddr)) != 0) {
-		perror("connection to server failed.");
-		exit(0);
-	}
-	
-	receive_file(tcp_sockfd);
-	close(tcp_sockfd);
-	printf("Finished\n");
+	pre_probe_cli();
 	/* End Pre-Probaing Phase TCP Phase */
 
   
