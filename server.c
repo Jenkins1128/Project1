@@ -147,7 +147,9 @@ void probe_serv() {
    
     udp_len = sizeof(cliaddr);  //udp_len is value/resuslt 
   
-	while (1) {
+	int j = 0;
+	while (j < 5999) {
+		j = j + 1;
 		printf("Waiting...\n");
 		udp_rcvd = recvfrom(udp_sockfd, (char *)buffer, MAXLINE,  
 					MSG_WAITALL, ( struct sockaddr *) &cliaddr, 
