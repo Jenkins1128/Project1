@@ -8,7 +8,7 @@
 #include <arpa/inet.h> 
 #include <netinet/in.h> 
   
-#define PORT    8765
+#define PORT    8766
 #define TCP_PORT 8081
 #define MAXLINE 6000 
 #define MAX 100
