@@ -168,7 +168,7 @@ void probe_serv() {
   
 // Driver code 
 int main() { 
-	// pre_probe_server();
+	pre_probe_server();
 	probe_serv();
     return 0; 
 }
