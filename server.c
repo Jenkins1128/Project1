@@ -9,7 +9,7 @@
 #include <netinet/in.h> 
   
 #define PORT    8765
-#define TCP_PORT 8080
+#define TCP_PORT 8081
 #define MAXLINE 6000 
 #define MAX 100
 #define SA struct sockaddr 
