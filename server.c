@@ -7,9 +7,11 @@
 #include <sys/socket.h> 
 #include <arpa/inet.h> 
 #include <netinet/in.h> 
+#include <sys/time.h>
   
 #define PORT    8765
-#define TCP_PORT 8080
+#define TCP_PORT1 8080
+#define TCP_PORT2 8081
 #define MAXLINE 6000 
 #define MAX 100
 #define SA struct sockaddr 
@@ -58,6 +60,13 @@ void sentFile(int sockfd)
 	
 } 
 
+long getMsTime() {
+	struct timeval curr_time;
+	gettimeofday(&curr_time, NULL);
+	long ms = curr_time.tv_sec * 1000 + curr_time.tv_usec / 1000;
+	return ms;
+}
+
 void pre_probe_server() {
 	int sockfd, connfd, len; 				// create socket file descriptor 
 	struct sockaddr_in servaddr, cli; 		// create structure object of sockaddr_in for client and server
@@ -78,7 +87,7 @@ void pre_probe_server() {
 	// assign IP, PORT 
 	servaddr.sin_family = AF_INET;					// specifies address family with IPv4 Protocol 
 	servaddr.sin_addr.s_addr = htonl(INADDR_ANY); 	// binds to any address
-	servaddr.sin_port = htons(TCP_PORT); 				// binds to PORT specified
+	servaddr.sin_port = htons(TCP_PORT1); 				// binds to PORT specified
 
 	// Binding newly created socket to given IP and verification 
 	if ((bind(sockfd, (SA*)&servaddr, sizeof(servaddr))) != 0) { 
@@ -118,7 +127,7 @@ void pre_probe_server() {
 	return;
 }
 
-void probe_serv() {
+char* probe_serv() {
     int udp_sockfd, udp_len, udp_rcvd; 
     char buffer[MAXLINE]; 
     char *hello = "Hello from server"; 
@@ -147,22 +156,47 @@ void probe_serv() {
    
     udp_len = sizeof(cliaddr);  //udp_len is value/resuslt 
   
-	int j = 0;
-	while (j < 5999) {
-		j = j + 1;
-		printf("Waiting...%d\n", j);
+	long low_start;
+	long low_end;
+	int done = 0;
+	int start_confirmed = 0;
+
+	// Get start message
+	char* start_msg = "Start LOW UDP Train";
+	char* end_msg = "End LOW UDP Train";
+	while (start_confirmed == 0) {
 		udp_rcvd = recvfrom(udp_sockfd, (char *)buffer, MAXLINE,  
 					MSG_WAITALL, ( struct sockaddr *) &cliaddr, 
 					&udp_len); 
-		buffer[udp_rcvd] = '\0'; 
-		printf("Client : %c%c%c%c\n", buffer[0], buffer[1], buffer[2], buffer[3]); 
+		buffer[udp_rcvd] = '\0';
+		printf("%s\n", buffer);
+		printf("%s\n", start_msg);
+		if (strcmp(buffer, start_msg) == 0) {
+			start_confirmed = 1;
+
+			sendto(udp_sockfd, start_msg, strlen(start_msg),
+					MSG_CONFIRM, (const struct sockaddr *) &cliaddr,
+					sizeof(cliaddr));
+		}
 	}
+
+	low_start = getMsTime();
+	while (strcmp((char *)buffer, end_msg) != 0) {
+		udp_rcvd = recvfrom(udp_sockfd, (char *)buffer, MAXLINE,  
+					MSG_WAITALL, ( struct sockaddr *) &cliaddr, 
+					&udp_len); 
+
+		buffer[udp_rcvd] = '\0'; 
+	}
+	low_end = getMsTime();
+	printf("Time Start: %ld and Time End: %ld\n", low_start, low_end);
+	printf("Difference: %ld\n", low_end - low_start);
     int close_return = close(udp_sockfd); 
 	printf("close_return: %d\n", close_return);
-	return;
+	return "Blicky";
 }
 
-void post_probe_serv() {
+void post_probe_serv(char* tested) {
 	int sockfd, connfd, len; 				// create socket file descriptor 
 	struct sockaddr_in servaddr, cli; 		// create structure object of sockaddr_in for client and server
 
@@ -172,9 +206,9 @@ void post_probe_serv() {
 	if (sockfd == -1) { 
 		printf("socket creation failed...\n"); 
 		exit(0); 
-	} 
-	else
+	} else {
 		printf("Socket successfully created..\n"); 
+	}
 	
 	// empty the 
 	bzero(&servaddr, sizeof(servaddr)); 
@@ -182,23 +216,23 @@ void post_probe_serv() {
 	// assign IP, PORT 
 	servaddr.sin_family = AF_INET;					// specifies address family with IPv4 Protocol 
 	servaddr.sin_addr.s_addr = htonl(INADDR_ANY); 	// binds to any address
-	servaddr.sin_port = htons(TCP_PORT); 				// binds to PORT specified
+	servaddr.sin_port = htons(TCP_PORT2); 				// binds to PORT specified
 
 	// Binding newly created socket to given IP and verification 
 	if ((bind(sockfd, (SA*)&servaddr, sizeof(servaddr))) != 0) { 
 		printf("socket bind failed...\n"); 
 		exit(0); 
-	} 
-	else
+	} else {
 		printf("Socket successfully binded..\n"); 
+	}
 
 	// Now server is ready to listen and verification 
 	if ((listen(sockfd, 5)) != 0) { 
 		printf("Listen failed...\n"); 
 		exit(0); 
-	} 
-	else
+	} else {
 		printf("Server listening..\n"); 
+	}
 	
 	len = sizeof(cli); 
 
@@ -208,11 +242,15 @@ void post_probe_serv() {
 	if (connfd < 0) { 
 		printf("server acccept failed...\n"); 
 		exit(0); 
-	} 
-	else
+	} else {
 		printf("server acccept the client...\n"); 
+	}
 
 	// TODO Send findings to client
+	char buff[MAX];
+	bzero(buff, sizeof(buff));
+	printf("Tested: %s\n", tested);
+	write(sockfd, tested, sizeof(tested));
 
 	// After transfer close the socket 
 	int return_value = close(sockfd); 
@@ -224,7 +262,7 @@ void post_probe_serv() {
 // Driver code 
 int main() { 
 	pre_probe_server();
-	probe_serv();
-	post_probe_serv();
+	char* returneddd = probe_serv();
+	post_probe_serv(returneddd);
     return 0; 
 }
