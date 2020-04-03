@@ -7,16 +7,17 @@
 #include <arpa/inet.h> 
 #include <netinet/in.h> 
 #include <time.h>
+#include <netdb.h> 
   
 #define SRC_PORT 9876 
 
 #define DST_PORT 8765 
 #define TCP_PORT1 8080
-#define TCP_PORT2 8081
+#define TCP_PORT2 8080
 #define DST_IP "192.168.56.101"
 
 #define MAXLINE 5000	
-#define MAX 100
+#define MAX 80
   
 #define PAYLOAD_SIZE 1002
 #define SA struct sockaddr 
@@ -25,28 +26,20 @@ void func(int sockfd)
 { 
     char buff[MAX]; 
     int n; 
-    // infinite loop for chat 
     for (;;) { 
-        bzero(buff, MAX); 
-  
-        // read the message from client and copy it in buffer 
-        read(sockfd, buff, sizeof(buff)); 
-        // print buffer which contains the client contents 
-        printf("From client: %s\t To client : ", buff); 
-        bzero(buff, MAX); 
+        bzero(buff, sizeof(buff)); 
+        printf("Enter the string : "); 
         n = 0; 
-        // copy server message in the buffer 
         while ((buff[n++] = getchar()) != '\n') 
             ; 
-  
-        // and send that buffer to client 
         write(sockfd, buff, sizeof(buff)); 
-  
-        // if msg contains "Exit" then server exit and chat ended. 
-        if (strncmp("exit", buff, 4) == 0) { 
-            printf("Server Exit...\n"); 
+        bzero(buff, sizeof(buff)); 
+        read(sockfd, buff, sizeof(buff)); 
+        printf("From Server : %s", buff); 
+        if ((strncmp(buff, "exit", 4)) == 0) { 
+            printf("Client Exit...\n"); 
             break; 
-        } 
+		}
     } 
 } 
 
@@ -252,8 +245,8 @@ void post_probe_cli() {
   
     // assign IP, PORT 
     servaddr.sin_family = AF_INET; 
-    servaddr.sin_addr.s_addr = inet_addr("127.0.0.1"); 
-    servaddr.sin_port = htons(PORT); 
+    servaddr.sin_addr.s_addr = inet_addr("192.168.56.101"); 
+    servaddr.sin_port = htons(TCP_PORT2); 
   
     // connect the client socket to server socket 
     if (connect(sockfd, (SA*)&servaddr, sizeof(servaddr)) != 0) { 
@@ -264,7 +257,12 @@ void post_probe_cli() {
         printf("connected to the server..\n"); 
   
     // function for chat 
-    func(sockfd); 
+    // func(sockfd); 
+
+    char buff[MAX]; 
+	bzero(buff, sizeof(buff)); 
+	read(sockfd, buff, sizeof(buff)); 
+	printf("From Server : %s\n", buff); 
   
     // close the socket 
     close(sockfd); 
