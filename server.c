@@ -1,7 +1,7 @@
-// Server side implementation of UDP client-server model 
 #include <stdio.h> 
 #include <stdlib.h> 
 #include <unistd.h> 
+#include <netdb.h> 
 #include <string.h> 
 #include <sys/types.h> 
 #include <sys/socket.h> 
@@ -9,41 +9,12 @@
 #include <netinet/in.h> 
 #include <sys/time.h>
   
-#define PORT    8765
+#define PORT    8088
 #define TCP_PORT1 8080
-#define TCP_PORT2 8081
+#define TCP_PORT2 8080
 #define MAXLINE 6000 
-#define MAX 100
+#define MAX 80
 #define SA struct sockaddr 
-
-void func(int sockfd) 
-{ 
-    char buff[MAX]; 
-    int n; 
-    // infinite loop for chat 
-    for (;;) { 
-        bzero(buff, MAX); 
-  
-        // read the message from client and copy it in buffer 
-        read(sockfd, buff, sizeof(buff)); 
-        // print buffer which contains the client contents 
-        printf("From client: %s\t To client : ", buff); 
-        bzero(buff, MAX); 
-        n = 0; 
-        // copy server message in the buffer 
-        while ((buff[n++] = getchar()) != '\n') 
-            ; 
-  
-        // and send that buffer to client 
-        write(sockfd, buff, sizeof(buff)); 
-  
-        // if msg contains "Exit" then server exit and chat ended. 
-        if (strncmp("exit", buff, 4) == 0) { 
-            printf("Server Exit...\n"); 
-            break; 
-        } 
-    } 
-} 
 
 void recvFile(int sockfd) 
 { 
@@ -225,7 +196,7 @@ char* probe_serv() {
 	return "Blicky";
 }
 
-void post_probe_serv(char* tested) {
+void post_probe_serv() {
     int sockfd, connfd, len; 
     struct sockaddr_in servaddr, cli; 
   
@@ -237,12 +208,14 @@ void post_probe_serv(char* tested) {
     } 
     else
         printf("Socket successfully created..\n"); 
+	int on = IP_PMTUDISC_DO;
+	setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on));
     bzero(&servaddr, sizeof(servaddr)); 
   
     // assign IP, PORT 
     servaddr.sin_family = AF_INET; 
     servaddr.sin_addr.s_addr = htonl(INADDR_ANY); 
-    servaddr.sin_port = htons(PORT); 
+    servaddr.sin_port = htons(TCP_PORT2); 
   
     // Binding newly created socket to given IP and verification 
     if ((bind(sockfd, (SA*)&servaddr, sizeof(servaddr))) != 0) { 
@@ -271,16 +244,18 @@ void post_probe_serv(char* tested) {
         printf("server acccept the client...\n"); 
   
     // Function for chatting between client and server 
-    func(connfd); 
+	char* blank = "Blicky";
+	write(connfd, blank, sizeof(blank)); 
   
     // After chatting close the socket 
+	close(connfd);
     close(sockfd); 
 }
   
 // Driver code 
 int main() { 
-	pre_probe_server();
-	char* returneddd = probe_serv();
-	post_probe_serv(returneddd);
-    return 0; 
+	// pre_probe_server();
+	// char* returneddd = probe_serv();
+	post_probe_serv();
+	return 0;
 }
