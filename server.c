@@ -9,10 +9,9 @@
 #include <netinet/in.h> 
 #include <sys/time.h>
   
-#define PORT    8088
-#define TCP_PORT1 8080
-#define TCP_PORT2 8080
-#define MAXLINE 6000 
+#define PORT      8765 
+#define TCP_PORT  8080
+#define MAXLINE   6000 
 #define MAX 80
 #define SA struct sockaddr 
 
@@ -75,27 +74,29 @@ void pre_probe_server() {
 	sockfd = socket(AF_INET, SOCK_STREAM, 0); 			// creating a TCP socket ( SOCK_STREAM )
 	
 	if (sockfd == -1) { 
-		printf("socket creation failed...\n"); 
+		perror("socket creation failed...\n"); 
 		exit(0); 
-	} 
-	else
+	} else {
 		printf("Socket successfully created..\n"); 
-	
+	}
+	int on = IP_PMTUDISC_DO;
+	int sso_return = setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on));
+	printf("SetSockopt: %d\n", sso_return);
 	// empty the 
 	bzero(&servaddr, sizeof(servaddr)); 
 
 	// assign IP, PORT 
 	servaddr.sin_family = AF_INET;					// specifies address family with IPv4 Protocol 
 	servaddr.sin_addr.s_addr = htonl(INADDR_ANY); 	// binds to any address
-	servaddr.sin_port = htons(TCP_PORT1); 				// binds to PORT specified
+	servaddr.sin_port = htons(TCP_PORT); 				// binds to PORT specified
 
 	// Binding newly created socket to given IP and verification 
 	if ((bind(sockfd, (SA*)&servaddr, sizeof(servaddr))) != 0) { 
 		printf("socket bind failed...\n"); 
 		exit(0); 
-	} 
-	else
+	} else {
 		printf("Socket successfully binded..\n"); 
+	}
 
 	// Now server is ready to listen and verification 
 	if ((listen(sockfd, 5)) != 0) { 
@@ -143,6 +144,9 @@ char* probe_serv() {
         perror("udp socket creation failed"); 
         exit(EXIT_FAILURE); 
     } 
+	int on = IP_PMTUDISC_DO;
+	int sso_return = setsockopt(udp_sockfd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on));
+	printf("SetSockopt: %d\n", sso_return);
       
       
       
@@ -165,12 +169,13 @@ char* probe_serv() {
 	char* start_msg = "Start LOW UDP Train";
 	char* end_msg = "End LOW UDP Train";
 	while (start_confirmed == 0) {
+		printf("Waiting\n");
 		udp_rcvd = recvfrom(udp_sockfd, (char *)buffer, MAXLINE,  
 					MSG_WAITALL, ( struct sockaddr *) &cliaddr, 
 					&udp_len); 
 		buffer[udp_rcvd] = '\0';
-		printf("%s\n", buffer);
-		printf("%s\n", start_msg);
+		printf("buffer: %s\n", buffer);
+		printf("start_msg: %s\n", start_msg);
 		if (strcmp(buffer, start_msg) == 0) {
 			start_confirmed = 1;
 
@@ -196,30 +201,31 @@ char* probe_serv() {
 	return "Blicky";
 }
 
-void post_probe_serv() {
+void post_probe_serv(char* returneddd) {
     int sockfd, connfd, len; 
     struct sockaddr_in servaddr, cli; 
   
     // socket create and verification 
     sockfd = socket(AF_INET, SOCK_STREAM, 0); 
     if (sockfd == -1) { 
-        printf("socket creation failed...\n"); 
+        perror("socket creation failed..."); 
         exit(0); 
-    } 
-    else
+    } else {
         printf("Socket successfully created..\n"); 
+	}
 	int on = IP_PMTUDISC_DO;
-	setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on));
+	int sso_return = setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on));
+	printf("SetSockopt: %d\n", sso_return);
     bzero(&servaddr, sizeof(servaddr)); 
   
     // assign IP, PORT 
     servaddr.sin_family = AF_INET; 
     servaddr.sin_addr.s_addr = htonl(INADDR_ANY); 
-    servaddr.sin_port = htons(TCP_PORT2); 
+    servaddr.sin_port = htons(8070); 
   
     // Binding newly created socket to given IP and verification 
     if ((bind(sockfd, (SA*)&servaddr, sizeof(servaddr))) != 0) { 
-        printf("socket bind failed...\n"); 
+        perror("socket bind failed..."); 
         exit(0); 
     } 
     else
@@ -245,7 +251,7 @@ void post_probe_serv() {
   
     // Function for chatting between client and server 
 	char* blank = "Blicky";
-	write(connfd, blank, sizeof(blank)); 
+	write(connfd, returneddd, sizeof(returneddd)); 
   
     // After chatting close the socket 
 	close(connfd);
@@ -254,8 +260,8 @@ void post_probe_serv() {
   
 // Driver code 
 int main() { 
-	// pre_probe_server();
-	// char* returneddd = probe_serv();
-	post_probe_serv();
+	pre_probe_server();
+	char* returneddd = probe_serv();
+	post_probe_serv(returneddd);
 	return 0;
 }
