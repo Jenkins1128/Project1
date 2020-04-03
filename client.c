@@ -11,7 +11,8 @@
 #define SRC_PORT 9876 
 
 #define DST_PORT 8765 
-#define TCP_PORT 8080
+#define TCP_PORT1 8080
+#define TCP_PORT2 8081
 #define DST_IP "192.168.56.101"
 
 #define MAXLINE 5000	
@@ -83,7 +84,7 @@ void pre_probe_cli() {
 	// assign IP, PORT 
 	servaddr.sin_family = AF_INET; 
 	servaddr.sin_addr.s_addr = inet_addr(DST_IP); 
-	servaddr.sin_port = htons(TCP_PORT); 
+	servaddr.sin_port = htons(TCP_PORT1); 
 
 	// connect the client socket to server socket 
 	if (connect(sockfd, (SA*)&servaddr, sizeof(servaddr)) != 0) { 
@@ -103,7 +104,7 @@ void pre_probe_cli() {
 
 void probe_cli() {
     int sockfd; 
-	int tcp_sockfd, tcp_connfd;
+	int rcvd_msg;
     char buffer[MAXLINE]; 
     char *hello = "Hello from client"; 
     struct sockaddr_in servaddr, cliaddr; 
@@ -134,49 +135,81 @@ void probe_cli() {
 	}
 
 	srand(time(0));	
-	char start_msg[100] = "Start UDP Train";
-	sendto(sockfd, (const char *)start_msg, strlen(start_msg), 
-			MSG_CONFIRM, (const struct sockaddr *) &servaddr, 
-			sizeof(servaddr)); 
-	for (int i = 1; i <= 6000; i++) {
-		int n, len; 
 
-		int curr_id = 5999;
+	// Creating Packet Train
+	char packet_train[6000][PAYLOAD_SIZE];
+	for (int i = 0; i < sizeof(packet_train)/sizeof(packet_train[0]); i++) {
+		// Create ID
+		int id_num = i + 1;
 		char hold_num[5];
-		sprintf(hold_num, "%04d", i);
+		sprintf(hold_num, "%04d", id_num);
 
-		char payload[PAYLOAD_SIZE];
-
-		for (int i = 0; i < PAYLOAD_SIZE - 1; i++) {
-			if (i < 4) {
-				payload[i] = hold_num[i];
+		for (int j = 0; j < PAYLOAD_SIZE - 1; j++) {
+			if (j < 4) {
+				packet_train[i][j] = hold_num[j];
 			} else {
-				// payload[i] = '0'; // All 0's in
 				int rand_num = rand() % 10;
 				char hold_rand_num[2];
 				sprintf(hold_rand_num, "%d", rand_num);
-				payload[i] = hold_rand_num[0];
+				// packet_train[i][j] = hold_rand_num[0];
+				packet_train[i][j] = '0'; // All 0's in
 			}
+			packet_train[i][PAYLOAD_SIZE - 2] = '0'; // All 0's in
 		}
-		payload[PAYLOAD_SIZE - 2] = '\0';
-		  
-		//; sendto(sockfd, (const char *)hello, strlen(hello), 
-		sendto(sockfd, (const char *)payload, strlen(payload), 
+	}
+
+	// Message to server to start timer
+	char* start_msg = "Start LOW UDP Train";
+	int confirm_received = 0;
+	int len = sizeof(servaddr);
+	while (confirm_received == 0) {
+		printf("Running START\n");
+		sendto(sockfd, start_msg, strlen(start_msg), 
 			MSG_CONFIRM, (const struct sockaddr *) &servaddr,  
 				sizeof(servaddr)); 
-		printf("Hello message sent.\n"); 
+		rcvd_msg = recvfrom(sockfd, (char *)buffer, MAXLINE,
+							MSG_DONTWAIT, ( struct sockaddr *)&servaddr,
+							&len);
+		printf("RCVFROM: %s\n", buffer);
+		if (strcmp(start_msg, buffer) == 0) {
+			printf("Message Received\n");
+			confirm_received = 1;
+		}
 	}
-	char end_msg[100] = "End UDP Train";
-	sendto(sockfd, (const char *)end_msg, strlen(end_msg), 
-		MSG_CONFIRM, (const struct sockaddr *) &servaddr,  
-			sizeof(servaddr)); 
+
+	// Sending Packet Train
+	for (int i = 0; i < sizeof(packet_train)/sizeof(packet_train[0]); i++) {
+	// for (int i = 0; i < 6000; i++) {
+		sendto(sockfd, (const char *)packet_train[i], strlen(packet_train[i]), 
+			MSG_CONFIRM, (const struct sockaddr *) &servaddr,  
+				sizeof(servaddr)); 
+	}
+
+	// Message to end to server to stop recording time
+	char end_msg[100] = "End LOW UDP Train";
+	printf("%s\n", end_msg);
+
+	confirm_received = 0;
+	while (confirm_received == 0) {
+		printf("Running END\n");
+		sendto(sockfd, (const char *)end_msg, strlen(end_msg), 
+			MSG_CONFIRM, (const struct sockaddr *) &servaddr,  
+				sizeof(servaddr)); 
+		rcvd_msg = recvfrom(sockfd, (char *)buffer, MAXLINE,
+							MSG_DONTWAIT, ( struct sockaddr *)&servaddr,
+							&len);
+		if (strcmp(start_msg, buffer) == 0) {
+			printf("Message Received\n");
+			confirm_received = 1;
+		}
+	}
   
     int close_return = close(sockfd); 
 	printf("close_return: %d\n", close_return);
 }
 
 void post_probe_cli() {
-	int sockfd, connfd; 
+	int sockfd;
 	struct sockaddr_in servaddr, cli; 
 
 	// socket create and varification 
@@ -184,27 +217,38 @@ void post_probe_cli() {
 	if (sockfd == -1) { 
 		printf("socket creation failed...\n"); 
 		exit(0); 
-	} 
-	else
+	} else {
 		printf("Socket successfully created..\n"); 
+	}
 	
 	bzero(&servaddr, sizeof(servaddr)); 
 
 	// assign IP, PORT 
 	servaddr.sin_family = AF_INET; 
 	servaddr.sin_addr.s_addr = inet_addr(DST_IP); 
-	servaddr.sin_port = htons(TCP_PORT); 
+	servaddr.sin_port = htons(TCP_PORT2); 
 
 	// connect the client socket to server socket 
+	while (connect(sockfd, (SA*)&servaddr, sizeof(servaddr)) != 0) { 
+		printf("connection with the server failed...\n"); 
+	}
+	/*
 	if (connect(sockfd, (SA*)&servaddr, sizeof(servaddr)) != 0) { 
 		printf("connection with the server failed...\n"); 
 		exit(0); 
-	} 
-	else
+	} else {
 		printf("connected to the server..\n"); 
+	}
+	*/
 
 	// function for sending File 
 	// TODO Receive findings
+	char buff[MAX];
+	bzero(buff, sizeof(buff));
+	while (strcmp(buff, "") == 0) {
+		read(sockfd, buff, sizeof(buff));
+		printf("From Server: %s\n", buff);
+	}
 
 	// close the socket 
 	int return_value = close(sockfd); 
@@ -215,5 +259,5 @@ int main() {
 	pre_probe_cli();
 	probe_cli();
 	post_probe_cli();
-    return 0; 
+	return 0;
 }
