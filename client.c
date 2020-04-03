@@ -12,11 +12,10 @@
 #define SRC_PORT 9876 
 
 #define DST_PORT 8765 
-#define TCP_PORT1 8080
-#define TCP_PORT2 8080
+#define TCP_PORT 8080
 #define DST_IP "192.168.56.101"
 
-#define MAXLINE 5000	
+#define MAXLINE 6000	
 #define MAX 80
   
 #define PAYLOAD_SIZE 1002
@@ -96,16 +95,18 @@ void pre_probe_cli() {
 	if (sockfd == -1) { 
 		printf("socket creation failed...\n"); 
 		exit(0); 
-	} 
-	else
+	} else {
 		printf("Socket successfully created..\n"); 
+	}
 	
+	int on = IP_PMTUDISC_DO;
+	int sso_return = setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on));
 	bzero(&servaddr, sizeof(servaddr)); 
 
 	// assign IP, PORT 
 	servaddr.sin_family = AF_INET; 
 	servaddr.sin_addr.s_addr = inet_addr(DST_IP); 
-	servaddr.sin_port = htons(TCP_PORT1); 
+	servaddr.sin_port = htons(TCP_PORT); 
 
 	// connect the client socket to server socket 
 	if (connect(sockfd, (SA*)&servaddr, sizeof(servaddr)) != 0) { 
@@ -238,23 +239,33 @@ void post_probe_cli() {
     if (sockfd == -1) { 
         printf("socket creation failed...\n"); 
         exit(0); 
-    } 
-    else
+    } else {
         printf("Socket successfully created..\n"); 
+	}
+
+	int on = IP_PMTUDISC_DO;
+	int sso_return = setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on));
+	printf("SSORETURN: %d\n", sso_return);
+	
     bzero(&servaddr, sizeof(servaddr)); 
   
     // assign IP, PORT 
     servaddr.sin_family = AF_INET; 
-    servaddr.sin_addr.s_addr = inet_addr("192.168.56.101"); 
-    servaddr.sin_port = htons(TCP_PORT2); 
+    servaddr.sin_addr.s_addr = inet_addr(DST_IP); 
+    servaddr.sin_port = htons(8070); 
   
     // connect the client socket to server socket 
-    if (connect(sockfd, (SA*)&servaddr, sizeof(servaddr)) != 0) { 
+    while (connect(sockfd, (SA*)&servaddr, sizeof(servaddr)) != 0) { 
         printf("connection with the server failed...\n"); 
+	}
+	/*
+    if (connect(sockfd, (SA*)&servaddr, sizeof(servaddr)) != 0) { 
+        perror("connection with the server failed..."); 
         exit(0); 
-    } 
-    else
+    } else {
         printf("connected to the server..\n"); 
+	}
+	*/
   
     // function for chat 
     // func(sockfd); 
@@ -269,8 +280,8 @@ void post_probe_cli() {
 }
 
 int main() { 
-	// pre_probe_cli();
-	// probe_cli();
+	pre_probe_cli();
+	probe_cli();
 	post_probe_cli();
 	return 0;
 }
