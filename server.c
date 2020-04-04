@@ -172,6 +172,7 @@ char* probe_serv() {
 		rcvd = recvfrom(sockfd, (char *)buffer, MAXLINE,  
 					MSG_WAITALL, ( struct sockaddr *) &cliaddr, 
 					&len); 
+		buffer[rcvd] = '\0';
 	}
 	
 	// Send msg to client to let it know to start sending packet train 
@@ -183,10 +184,11 @@ char* probe_serv() {
 	low_start = getMsTime();
 
 	// Keep receiving packets until end_msg is received
-	while (strcmp((char *)buffer, end_msg) != 0) {
+	while (strcmp(buffer, end_msg) != 0) {
 		rcvd = recvfrom(sockfd, (char *)buffer, MAXLINE,  
 					MSG_WAITALL, ( struct sockaddr *) &cliaddr, 
 					&len); 
+		buffer[rcvd] = '\0';
 	}
 
 	// Get end time
@@ -206,6 +208,7 @@ char* probe_serv() {
 		rcvd = recvfrom(sockfd, (char *)buffer, MAXLINE,  
 					MSG_WAITALL, ( struct sockaddr *) &cliaddr, 
 					&len); 
+		buffer[rcvd] = '\0';
 	}
 
 	// Send message back to client to let it know it is ready
@@ -217,10 +220,11 @@ char* probe_serv() {
 	high_start = getMsTime();
 
 	// Keep receiving packets until end_msg is received
-	while (strcmp((char *)buffer, end_msg) != 0) {
+	while (strcmp(buffer, end_msg) != 0) {
 		rcvd = recvfrom(sockfd, (char *)buffer, MAXLINE,  
 					MSG_WAITALL, ( struct sockaddr *) &cliaddr, 
 					&len); 
+		buffer[rcvd] = '\0';
 	}
 	
 	// Get end time for high entrophy time
@@ -241,6 +245,7 @@ char* probe_serv() {
 	}
 }
 
+/* Post probing phase for client */
 void post_probe_serv(char* compression_result) {
 	int sockfd, connfd, len;
 	struct sockaddr_in servaddr, cli;
