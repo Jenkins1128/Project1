@@ -258,7 +258,6 @@ void post_probe_cli() {
 
 	// Keep attempting a connection to the server until one is achieved.
     while (connect(sockfd, (SA*)&servaddr, sizeof(servaddr)) != 0) { 
-        // perror("connection with the server failed..."); 
 	}
 
 	// Buffer to receive message from server on its findings
@@ -267,17 +266,13 @@ void post_probe_cli() {
 	read(sockfd, buff, sizeof(buff));
 	printf("Server Findings: %s\n", buff); 
 	
-	while (read(sockfd, buff, sizeof(buff)) > 0) {
-		printf("Read; %s\n", buff);
-	}
-  
     // Close the socket when done
-    // close(sockfd); 
+    close(sockfd); 
 }
 
 int main() { 
-	// pre_probe_cli();
-	// probe_cli();
+	pre_probe_cli();
+	probe_cli();
 	post_probe_cli();
 	return 0;
 }

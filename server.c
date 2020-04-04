@@ -125,7 +125,7 @@ void pre_probe_server() {
 /* Function for probing phase of server 
  * Returns compression results found
 */
-char* probe_serv() {
+int probe_serv() {
     int sockfd, len, rcvd; 
     char buffer[MAXLINE]; 
     struct sockaddr_in servaddr, cliaddr; 
@@ -236,17 +236,12 @@ char* probe_serv() {
 	// Calculate elapsed time for high and low entrophy data
 	int low_entrophy_time = low_end - low_start;
 	int high_entrophy_time = high_end - high_start;
-	
-	// Return proper message to send back to client
-	if ((high_entrophy_time - low_entrophy_time) > 100) {
-		return "Compression detected!";
-	} else {
-		return "No compression was detected.";
-	}
+
+	return (high_entrophy_time - low_entrophy_time);
 }
 
 /* Post probing phase for client */
-void post_probe_serv(char* compression_result) {
+void post_probe_serv(int compression_result) {
 	int sockfd, connfd, len;
 	struct sockaddr_in servaddr, cli;
 
@@ -292,19 +287,24 @@ void post_probe_serv(char* compression_result) {
 	}
   
     // Send message to client
-	char buffff[100] = "A really really really really really long string\n";
-	write(connfd, buffff, sizeof(buffff)); 
-	// write(connfd, compression_result, sizeof(compression_result)); 
+	// Return proper message to send back to client
+	if (compression_result > 100) {
+		char buff[MAX] = "Compression detected!";
+		write(connfd, buff, sizeof(buff)); 
+	} else {
+		char buff[MAX] = "No compression was detected.";
+		write(connfd, buff, sizeof(buff)); 
+	}
   
     // Close sockets when done
-	// close(connfd);
-    // close(sockfd); 
+	close(connfd);
+    close(sockfd); 
 }
   
 // Driver code 
 int main() { 
-	// pre_probe_server();
-	// char* compression_result = probe_serv();
-	post_probe_serv("blank really really really really really long\0\n");
+	pre_probe_server();
+	int compression_result = probe_serv();
+	post_probe_serv(compression_result);
 	return 0;
 }
