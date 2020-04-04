@@ -16,9 +16,9 @@
 #define DST_IP   "192.168.56.101"
 
 #define MAXLINE  6000	
-#define MAX 	 80
+#define MAX 	 800
   
-#define SLEEP_DURATION 15
+#define SLEEP_DURATION 5
 #define PAYLOAD_SIZE 1002
 #define SA struct sockaddr 
 
@@ -262,7 +262,7 @@ void post_probe_cli() {
 
 	// Buffer to receive message from server on its findings
     char buff[MAX]; 
-	bzero(buff, sizeof(buff)); 
+	bzero(buff, MAX); 
 	read(sockfd, buff, sizeof(buff)); 
 	printf("Server Findings: %s\n", buff); 
   
