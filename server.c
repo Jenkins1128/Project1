@@ -85,7 +85,6 @@ void pre_probe_server() {
 	// Needed for when running program back to back
 	int on = IP_PMTUDISC_DO;
 	int sso_return = setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on));
-	printf("SetSockopt: %d\n", sso_return);
 
 	// Empty the server struct before using
 	bzero(&servaddr, sizeof(servaddr)); 
@@ -257,7 +256,6 @@ void post_probe_serv(char* compression_result) {
 	// Needed for when running program back to back
 	int on = IP_PMTUDISC_DO;
 	int sso_return = setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on));
-	printf("SetSockopt: %d\n", sso_return);
 
 	// Empty the server struct before using
 	bzero(&servaddr, sizeof(servaddr)); 
