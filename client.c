@@ -263,7 +263,9 @@ void post_probe_cli() {
 	// Buffer to receive message from server on its findings
     char buff[MAX]; 
 	bzero(buff, MAX); 
-	read(sockfd, buff, sizeof(buff)); 
+	while(read(sockfd, buff, sizeof(buff)) > -2) {
+		printf("SOCK: %s\n", buff);
+	} 
 	printf("Server Findings: %s\n", buff); 
   
     // Close the socket when done
