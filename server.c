@@ -291,18 +291,18 @@ void post_probe_serv(char* compression_result) {
 		exit(EXIT_FAILURE); 
 	}
   
-    // Function for chatting between client and server 
+    // Send message to client
 	write(connfd, compression_result, sizeof(compression_result)); 
   
     // Close sockets when done
-	close(connfd);
-    close(sockfd); 
+	// close(connfd);
+    // close(sockfd); 
 }
   
 // Driver code 
 int main() { 
-	pre_probe_server();
-	char* compression_result = probe_serv();
-	post_probe_serv(compression_result);
+	// pre_probe_server();
+	// char* compression_result = probe_serv();
+	post_probe_serv("blank really really really really really long\0\n");
 	return 0;
 }
