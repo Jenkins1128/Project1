@@ -83,6 +83,8 @@ void pre_probe_cli() {
 	// Allow the socket to reuse a socket in use (needed for consecutive runs)
 	int on = IP_PMTUDISC_DO;
 	int sso_return = setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on));
+
+	// Empty the server struct before using
 	bzero(&servaddr, sizeof(servaddr)); 
 
 	// Assign IP, PORT for server information
@@ -96,7 +98,7 @@ void pre_probe_cli() {
         exit(EXIT_FAILURE); 
 	} 
 
-	// Fnction for sending File 
+	// Send config file
 	sentFile(sockfd); 
 
 	// Close the socket 

@@ -15,50 +15,53 @@
 #define MAX 80
 #define SA struct sockaddr 
 
-void recvFile(int sockfd) 
-{ 
-	char buff[MAX]; 	// to store message from client
+/* Function used to receive file */
+void recvFile(int sockfd) { 
+	// Buffer used to receive file 
+	char buff[MAX]; 
 	
+	// Opening file that that will hold received file
 	FILE *fp;
-	fp=fopen("received.c","w"); // stores the file content in recieved.txt in the program directory
 	
-	if( fp == NULL ){
-		printf("Error IN Opening File ");
-		return ;
+	// Ensure the file 
+	if((fp = fopen("received.c", "w")) == NULL) {
+		perror("Error IN Opening File");
+		exit(EXIT_FAILURE);
 	}
 	
-	while( read(sockfd,buff,MAX) > 0 )
-		fprintf(fp,"%s",buff);
+	// Read the file and write it to file
+	while(read(sockfd, buff, MAX) > 0) {
+		fprintf(fp, "%s", buff);
+	}
 	
+	// Close file pointer after writing to the file
 	fclose(fp);
-	printf("File received successfully !! \n");
-	printf("New File created is received.txt !! \n");
-
 } 
 
-void sentFile(int sockfd) 
-{ 
-	char buff[MAX]; 						// for read operation from file and used to sent operation 
+/* Function used to send file */
+void sentFile(int sockfd) { 
+	// Buffer used to receive file 
+	char buff[MAX];
 	
-	// create file 
+	// Create file 
 	FILE *fp;
-	fp=fopen("client.c","r");		// open file uses both stdio and stdin header files
-											// file should be present at the program directory
 
-	if( fp == NULL ){
-		printf("Error IN Opening File .. \n");
-		return ;
+	// Open file and ensure it opens
+	if((fp=fopen("client.c", "r")) == NULL) {
+		perror("Error IN Opening File .. ");
+		exit(EXIT_FAILURE);
 	}
 	
-	while ( fgets(buff,MAX,fp) != NULL )	// fgets reads upto MAX character or EOF 
-		write(sockfd,buff,sizeof(buff)); 	// sent the file data to stream
+	// Read the contents of the file into the buffer and send it over socket
+	while (fgets(buff, MAX, fp) != NULL) {
+		write(sockfd, buff, sizeof(buff));
+	}
 	
-	fclose (fp);							// close the file 
-	
-	printf("File Sent successfully !!! \n");
-	
+	// Close file pointer after writing to the file
+	fclose(fp);					
 } 
 
+/* Function to get current time in ms */
 long getMsTime() {
 	struct timeval curr_time;
 	gettimeofday(&curr_time, NULL);
@@ -66,231 +69,229 @@ long getMsTime() {
 	return ms;
 }
 
+/* Function for pre probing phase */
 void pre_probe_server() {
-	int sockfd, connfd, len; 				// create socket file descriptor 
-	struct sockaddr_in servaddr, cli; 		// create structure object of sockaddr_in for client and server
+	int sockfd, connfd, len;
+	struct sockaddr_in servaddr, cli;
 
-	// socket create and verification 
-	sockfd = socket(AF_INET, SOCK_STREAM, 0); 			// creating a TCP socket ( SOCK_STREAM )
-	
-	if (sockfd == -1) { 
-		perror("socket creation failed...\n"); 
-		exit(0); 
-	} else {
-		printf("Socket successfully created..\n"); 
+	// Create TCP socket and make sure it was created successfully
+	sockfd = socket(AF_INET, SOCK_STREAM, 0); 
+	if ((sockfd = socket(AF_INET, SOCK_STREAM, 0)) < 0) { 
+		perror("socket creation failed..."); 
+        exit(EXIT_FAILURE); 
 	}
+
+	// Set socket option to resuse port in case it's already been used
+	// Needed for when running program back to back
 	int on = IP_PMTUDISC_DO;
 	int sso_return = setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on));
 	printf("SetSockopt: %d\n", sso_return);
-	// empty the 
+
+	// Empty the server struct before using
 	bzero(&servaddr, sizeof(servaddr)); 
 
-	// assign IP, PORT 
-	servaddr.sin_family = AF_INET;					// specifies address family with IPv4 Protocol 
-	servaddr.sin_addr.s_addr = htonl(INADDR_ANY); 	// binds to any address
-	servaddr.sin_port = htons(TCP_PORT); 				// binds to PORT specified
+	// Assign IP, PORT for server information
+	servaddr.sin_family = AF_INET;
+	servaddr.sin_addr.s_addr = htonl(INADDR_ANY);
+	servaddr.sin_port = htons(TCP_PORT); 
 
 	// Binding newly created socket to given IP and verification 
 	if ((bind(sockfd, (SA*)&servaddr, sizeof(servaddr))) != 0) { 
-		printf("socket bind failed...\n"); 
-		exit(0); 
-	} else {
-		printf("Socket successfully binded..\n"); 
-	}
+		perror("socket bind failed...\n"); 
+		exit(EXIT_FAILURE); 
+	} 
 
 	// Now server is ready to listen and verification 
 	if ((listen(sockfd, 5)) != 0) { 
-		printf("Listen failed...\n"); 
-		exit(0); 
+		perror("Listen failed...\n"); 
+		exit(EXIT_FAILURE); 
 	} 
-	else
-		printf("Server listening..\n"); 
 	
+	// Get size of cli struct
 	len = sizeof(cli); 
 
-	// Accept the data packet from client and verification 
-	connfd = accept(sockfd, (SA*)&cli, &len); 	// accepts connection from socket
-	
-	if (connfd < 0) { 
-		printf("server acccept failed...\n"); 
-		exit(0); 
-	} 
-	else
-		printf("server acccept the client...\n"); 
+	// Attempt connection
+	if ((connfd = accept(sockfd, (SA*)&cli, &len)) < 0) { 
+		perror("server acccept failed...\n"); 
+		exit(EXIT_FAILURE); 
+	}
 
-	// Function for chatting between client and server 
+	// Receive the file client is attempting to send
 	recvFile(connfd); 
 
-	// After transfer close the socket 
-	int return_value = close(sockfd); 
-	printf("return:value:%d\n", return_value);
-
-	return;
+	// After receiving file, close the socket 
+	close(sockfd); 
 }
 
+/* Function for probing phase of server 
+ * Returns compression results found
+*/
 char* probe_serv() {
-    int udp_sockfd, udp_len, udp_rcvd; 
+    int sockfd, len, rcvd; 
     char buffer[MAXLINE]; 
-    char *hello = "Hello from server"; 
     struct sockaddr_in servaddr, cliaddr; 
 
-    memset(&servaddr, 0, sizeof(servaddr)); 
+	// Zero out server struct
+    bzero(&servaddr, sizeof(servaddr)); 
 
     // Filling server information 
-    servaddr.sin_family = AF_INET; // IPv4 
+    servaddr.sin_family = AF_INET;
 	servaddr.sin_addr.s_addr = htonl(INADDR_ANY); 
     servaddr.sin_port = htons(PORT); 
-    if ( (udp_sockfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0 ) { 
-        perror("udp socket creation failed"); 
+
+	// Attempt to create socket 
+    if ((sockfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) { 
+        perror("socket creation failed"); 
         exit(EXIT_FAILURE); 
     } 
+
+	// Set socket option to reuse a port that may be in use
 	int on = IP_PMTUDISC_DO;
-	int sso_return = setsockopt(udp_sockfd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on));
-	printf("SetSockopt: %d\n", sso_return);
-      
-      
+	int sso_return = setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on));
       
     // Bind the socket with the server address 
-    if ( bind(udp_sockfd, (const struct sockaddr *)&servaddr,  
-            sizeof(servaddr)) < 0 ) 
-    { 
-        perror("udp bind failed"); 
+    if (bind(sockfd, (const struct sockaddr *)&servaddr, sizeof(servaddr)) < 0) { 
+        perror("bind failed"); 
         exit(EXIT_FAILURE); 
     } 
    
-    udp_len = sizeof(cliaddr);  //udp_len is value/resuslt 
+	// Size of cli struct
+    len = sizeof(cliaddr);  
   
+	// Variables to hold times of start and end of packet trains
 	long low_start;
 	long low_end;
-	int done = 0;
-	int start_confirmed = 0;
 
-	// Get start message
+	// Set start and end messages for low entrophy trains
 	char* start_msg = malloc(256);
 	strcpy(start_msg, "Start LOW UDP Train");
 	char* end_msg = malloc(256);
 	strcpy(end_msg, "End LOW UDP Train");
-	while (start_confirmed == 0) {
-		printf("Waiting\n");
-		udp_rcvd = recvfrom(udp_sockfd, (char *)buffer, MAXLINE,  
+
+	// Wait for server to receive start_msg from client, then continue
+	while (strcmp(buffer, start_msg) != 0) {
+		rcvd = recvfrom(sockfd, (char *)buffer, MAXLINE,  
 					MSG_WAITALL, ( struct sockaddr *) &cliaddr, 
-					&udp_len); 
-		buffer[udp_rcvd] = '\0';
-		printf("buffer: %s\n", buffer);
-		printf("start_msg: %s\n", start_msg);
-		if (strcmp(buffer, start_msg) == 0) {
-			start_confirmed = 1;
-
-			sendto(udp_sockfd, start_msg, strlen(start_msg),
-					MSG_CONFIRM, (const struct sockaddr *) &cliaddr,
-					sizeof(cliaddr));
-		}
+					&len); 
 	}
+	
+	// Send msg to client to let it know to start sending packet train 
+	sendto(sockfd, start_msg, strlen(start_msg),
+			MSG_CONFIRM, (const struct sockaddr *) &cliaddr,
+			sizeof(cliaddr));
 
+	// Get start time
 	low_start = getMsTime();
-	while (strcmp((char *)buffer, end_msg) != 0) {
-		udp_rcvd = recvfrom(udp_sockfd, (char *)buffer, MAXLINE,  
-					MSG_WAITALL, ( struct sockaddr *) &cliaddr, 
-					&udp_len); 
 
-		buffer[udp_rcvd] = '\0'; 
+	// Keep receiving packets until end_msg is received
+	while (strcmp((char *)buffer, end_msg) != 0) {
+		rcvd = recvfrom(sockfd, (char *)buffer, MAXLINE,  
+					MSG_WAITALL, ( struct sockaddr *) &cliaddr, 
+					&len); 
 	}
+
+	// Get end time
 	low_end = getMsTime();
 
+
+	// Variables for high entrophy start/end time
+	long high_start;
+	long high_end;
+	// Set start and end msg for high entrophy train
 	strcpy(start_msg, "Start HIGH UDP Train");
-	printf("%s\n", start_msg);
 	strcpy(end_msg, "End HIGH UDP Train");
-	start_confirmed = 0;
-	while (start_confirmed == 0) {
-		printf("Waiting\n");
-		udp_rcvd = recvfrom(udp_sockfd, (char *)buffer, MAXLINE,  
-					MSG_WAITALL, ( struct sockaddr *) &cliaddr, 
-					&udp_len); 
-		buffer[udp_rcvd] = '\0';
-		printf("buffer: %s\n", buffer);
-		printf("start_msg: %s\n", start_msg);
-		if (strcmp(buffer, start_msg) == 0) {
-			start_confirmed = 1;
 
-			sendto(udp_sockfd, start_msg, strlen(start_msg),
-					MSG_CONFIRM, (const struct sockaddr *) &cliaddr,
-					sizeof(cliaddr));
-		}
+	// Wait for client to send start msg 
+	// to let server know packet train coming next
+	while (strcmp(buffer, start_msg) != 0) {
+		rcvd = recvfrom(sockfd, (char *)buffer, MAXLINE,  
+					MSG_WAITALL, ( struct sockaddr *) &cliaddr, 
+					&len); 
 	}
 
-	low_start = getMsTime();
+	// Send message back to client to let it know it is ready
+	sendto(sockfd, start_msg, strlen(start_msg),
+			MSG_CONFIRM, (const struct sockaddr *) &cliaddr,
+			sizeof(cliaddr));
+
+	// Get start time
+	high_start = getMsTime();
+
+	// Keep receiving packets until end_msg is received
 	while (strcmp((char *)buffer, end_msg) != 0) {
-		udp_rcvd = recvfrom(udp_sockfd, (char *)buffer, MAXLINE,  
+		rcvd = recvfrom(sockfd, (char *)buffer, MAXLINE,  
 					MSG_WAITALL, ( struct sockaddr *) &cliaddr, 
-					&udp_len); 
-
-		buffer[udp_rcvd] = '\0'; 
+					&len); 
 	}
-	low_end = getMsTime();
+	
+	// Get end time for high entrophy time
+	high_end = getMsTime();
 
+	// Close socket once done
+    close(sockfd); 
+
+	// Calculate elapsed time for high and low entrophy data
 	int low_entrophy_time = low_end - low_start;
-	int high_entrophy_time = low_end - low_start;
-	int end_confirmed = 0;
-	printf("Time Start: %ld and Time End: %ld\n", low_start, low_end);
-	printf("Difference: %ld\n", low_end - low_start);
-    int close_return = close(udp_sockfd); 
-	printf("close_return: %d\n", close_return);
-	return "Blicky";
+	int high_entrophy_time = high_end - high_start;
+	
+	// Return proper message to send back to client
+	if ((high_entrophy_time - low_entrophy_time) > 100) {
+		return "Compression detected!";
+	} else {
+		return "No compression was detected.";
+	}
 }
 
-void post_probe_serv(char* returneddd) {
-    int sockfd, connfd, len; 
-    struct sockaddr_in servaddr, cli; 
-  
-    // socket create and verification 
-    sockfd = socket(AF_INET, SOCK_STREAM, 0); 
-    if (sockfd == -1) { 
-        perror("socket creation failed..."); 
-        exit(0); 
-    } else {
-        printf("Socket successfully created..\n"); 
+void post_probe_serv(char* compression_result) {
+	int sockfd, connfd, len;
+	struct sockaddr_in servaddr, cli;
+
+	// Create TCP socket and make sure it was created successfully
+	sockfd = socket(AF_INET, SOCK_STREAM, 0); 
+	if ((sockfd = socket(AF_INET, SOCK_STREAM, 0)) < 0) { 
+		perror("socket creation failed..."); 
+        exit(EXIT_FAILURE); 
 	}
+
+	// Set socket option to resuse port in case it's already been used
+	// Needed for when running program back to back
 	int on = IP_PMTUDISC_DO;
 	int sso_return = setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on));
 	printf("SetSockopt: %d\n", sso_return);
-    bzero(&servaddr, sizeof(servaddr)); 
-  
-    // assign IP, PORT 
-    servaddr.sin_family = AF_INET; 
-    servaddr.sin_addr.s_addr = htonl(INADDR_ANY); 
-    servaddr.sin_port = htons(TCP_PORT); 
-  
-    // Binding newly created socket to given IP and verification 
-    if ((bind(sockfd, (SA*)&servaddr, sizeof(servaddr))) != 0) { 
-        perror("socket bind failed..."); 
-        exit(0); 
-    } 
-    else
-        printf("Socket successfully binded..\n"); 
-  
-    // Now server is ready to listen and verification 
-    if ((listen(sockfd, 5)) != 0) { 
-        printf("Listen failed...\n"); 
-        exit(0); 
-    } 
-    else
-        printf("Server listening..\n"); 
-    len = sizeof(cli); 
-  
-    // Accept the data packet from client and verification 
-    connfd = accept(sockfd, (SA*)&cli, &len); 
-    if (connfd < 0) { 
-        printf("server acccept failed...\n"); 
-        exit(0); 
-    } 
-    else
-        printf("server acccept the client...\n"); 
+
+	// Empty the server struct before using
+	bzero(&servaddr, sizeof(servaddr)); 
+
+	// Assign IP, PORT for server information
+	servaddr.sin_family = AF_INET;
+	servaddr.sin_addr.s_addr = htonl(INADDR_ANY);
+	servaddr.sin_port = htons(TCP_PORT); 
+
+	// Binding newly created socket to given IP and verification 
+	if ((bind(sockfd, (SA*)&servaddr, sizeof(servaddr))) != 0) { 
+		perror("socket bind failed...\n"); 
+		exit(EXIT_FAILURE); 
+	} 
+
+	// Now server is ready to listen and verification 
+	if ((listen(sockfd, 5)) != 0) { 
+		perror("Listen failed...\n"); 
+		exit(EXIT_FAILURE); 
+	} 
+	
+	// Get size of cli struct
+	len = sizeof(cli); 
+
+	// Attempt connection
+	if ((connfd = accept(sockfd, (SA*)&cli, &len)) < 0) { 
+		perror("server acccept failed...\n"); 
+		exit(EXIT_FAILURE); 
+	}
   
     // Function for chatting between client and server 
-	char* blank = "Blicky";
-	write(connfd, returneddd, sizeof(returneddd)); 
+	write(connfd, compression_result, sizeof(compression_result)); 
   
-    // After chatting close the socket 
+    // Close sockets when done
 	close(connfd);
     close(sockfd); 
 }
@@ -298,7 +299,7 @@ void post_probe_serv(char* returneddd) {
 // Driver code 
 int main() { 
 	pre_probe_server();
-	char* returneddd = probe_serv();
-	post_probe_serv(returneddd);
+	char* compression_result = probe_serv();
+	post_probe_serv(compression_result);
 	return 0;
 }
