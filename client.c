@@ -156,8 +156,9 @@ void probe_cli() {
 				// packet_train[i][j] = hold_rand_num[0];
 				packet_train[i][j] = '0'; // All 0's in
 			}
-			packet_train[i][PAYLOAD_SIZE - 2] = '\0'; // All 0's in
 		}
+
+		packet_train[i][PAYLOAD_SIZE - 1] = '\0'; // All 0's in
 	}
 
 	// Send message to server to indicate next packet will be start of Low Entrophy
@@ -165,9 +166,9 @@ void probe_cli() {
 	// Ensures the server gets the message. 
 	char* start_msg = "Start LOW UDP Train";
 	int len = sizeof(servaddr);
-	while (strcmp(start_msg, buffer) == 0) {
+	while (strcmp(start_msg, buffer) != 0) {
 		sendto(sockfd, start_msg, strlen(start_msg), 
-			MSG_CONFIRM, (const struct sockaddr *) &servaddr,  
+				MSG_CONFIRM, (const struct sockaddr *) &servaddr,  
 				sizeof(servaddr)); 
 		rcvd_msg = recvfrom(sockfd, (char *)buffer, MAXLINE,
 							MSG_DONTWAIT, ( struct sockaddr *)&servaddr,
@@ -177,22 +178,16 @@ void probe_cli() {
 	// Sending Packet Train
 	for (int i = 0; i < sizeof(packet_train)/sizeof(packet_train[0]); i++) {
 		sendto(sockfd, (const char *)packet_train[i], strlen(packet_train[i]), 
-			MSG_CONFIRM, (const struct sockaddr *) &servaddr,  
+				MSG_CONFIRM, (const struct sockaddr *) &servaddr,  
 				sizeof(servaddr)); 
 	}
 
 	// Message to send to server to stop recording time
-	char end_msg[100] = "End LOW UDP Train";
+	char* end_msg = "End LOW UDP Train";
 	// Ensures the server gets the message. 
-	while (strcmp(start_msg, buffer) == 0) {
-		printf("Running END\n");
-		sendto(sockfd, (const char *)end_msg, strlen(end_msg), 
+	sendto(sockfd, end_msg, strlen(end_msg), 
 			MSG_CONFIRM, (const struct sockaddr *) &servaddr,  
-				sizeof(servaddr)); 
-		rcvd_msg = recvfrom(sockfd, (char *)buffer, MAXLINE,
-							MSG_DONTWAIT, ( struct sockaddr *)&servaddr,
-							&len);
-	}
+			sizeof(servaddr)); 
 
 	// Close socket when done
     close(sockfd); 
@@ -221,7 +216,7 @@ void post_probe_cli() {
 
 	// Keep attempting a connection to the server until one is achieved.
     while (connect(sockfd, (SA*)&servaddr, sizeof(servaddr)) != 0) { 
-        perror("connection with the server failed..."); 
+        // perror("connection with the server failed..."); 
 	}
 
 	// Buffer to receive message from server on its findings
