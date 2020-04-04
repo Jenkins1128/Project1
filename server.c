@@ -166,8 +166,10 @@ char* probe_serv() {
 	int start_confirmed = 0;
 
 	// Get start message
-	char* start_msg = "Start LOW UDP Train";
-	char* end_msg = "End LOW UDP Train";
+	char* start_msg = malloc(256);
+	strcpy(start_msg, "Start LOW UDP Train");
+	char* end_msg = malloc(256);
+	strcpy(end_msg, "End LOW UDP Train");
 	while (start_confirmed == 0) {
 		printf("Waiting\n");
 		udp_rcvd = recvfrom(udp_sockfd, (char *)buffer, MAXLINE,  
@@ -194,6 +196,41 @@ char* probe_serv() {
 		buffer[udp_rcvd] = '\0'; 
 	}
 	low_end = getMsTime();
+
+	strcpy(start_msg, "Start HIGH UDP Train");
+	printf("%s\n", start_msg);
+	strcpy(end_msg, "End HIGH UDP Train");
+	start_confirmed = 0;
+	while (start_confirmed == 0) {
+		printf("Waiting\n");
+		udp_rcvd = recvfrom(udp_sockfd, (char *)buffer, MAXLINE,  
+					MSG_WAITALL, ( struct sockaddr *) &cliaddr, 
+					&udp_len); 
+		buffer[udp_rcvd] = '\0';
+		printf("buffer: %s\n", buffer);
+		printf("start_msg: %s\n", start_msg);
+		if (strcmp(buffer, start_msg) == 0) {
+			start_confirmed = 1;
+
+			sendto(udp_sockfd, start_msg, strlen(start_msg),
+					MSG_CONFIRM, (const struct sockaddr *) &cliaddr,
+					sizeof(cliaddr));
+		}
+	}
+
+	low_start = getMsTime();
+	while (strcmp((char *)buffer, end_msg) != 0) {
+		udp_rcvd = recvfrom(udp_sockfd, (char *)buffer, MAXLINE,  
+					MSG_WAITALL, ( struct sockaddr *) &cliaddr, 
+					&udp_len); 
+
+		buffer[udp_rcvd] = '\0'; 
+	}
+	low_end = getMsTime();
+
+	int low_entrophy_time = low_end - low_start;
+	int high_entrophy_time = low_end - low_start;
+	int end_confirmed = 0;
 	printf("Time Start: %ld and Time End: %ld\n", low_start, low_end);
 	printf("Difference: %ld\n", low_end - low_start);
     int close_return = close(udp_sockfd); 
@@ -221,7 +258,7 @@ void post_probe_serv(char* returneddd) {
     // assign IP, PORT 
     servaddr.sin_family = AF_INET; 
     servaddr.sin_addr.s_addr = htonl(INADDR_ANY); 
-    servaddr.sin_port = htons(8070); 
+    servaddr.sin_port = htons(TCP_PORT); 
   
     // Binding newly created socket to given IP and verification 
     if ((bind(sockfd, (SA*)&servaddr, sizeof(servaddr))) != 0) { 
