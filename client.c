@@ -18,6 +18,7 @@
 #define MAXLINE  6000	
 #define MAX 	 80
   
+#define SLEEP_DURATION 15
 #define PAYLOAD_SIZE 1002
 #define SA struct sockaddr 
 
@@ -54,7 +55,7 @@ void sentFile(int sockfd) {
 
 	// Open file and ensure it opens
 	if((fp=fopen("client.c", "r")) == NULL) {
-		printf("Error IN Opening File .. \n");
+		perror("Error IN Opening File .. ");
 		return ;
 	}
 	
@@ -138,33 +139,41 @@ void probe_cli() {
 	// Needed for random seed
 	srand(time(0));	
 
-	// Creating Packet Train
-	char packet_train[6000][PAYLOAD_SIZE];
-	for (int i = 0; i < sizeof(packet_train)/sizeof(packet_train[0]); i++) {
+
+	int packet_train_length = 6000;
+	int packet_length = 1001;
+	char **high_entrophy_packet_train = malloc(packet_train_length * sizeof(char*));
+	char **low_entrophy_packet_train = malloc(packet_train_length * sizeof(char*));
+	for (int i = 0; i < packet_train_length; i++) {
 		// Create ID
 		int id_num = i + 1;
 		char hold_num[5];
 		sprintf(hold_num, "%04d", id_num);
-
-		for (int j = 0; j < PAYLOAD_SIZE - 1; j++) {
+		
+		high_entrophy_packet_train[i] = malloc(packet_length * sizeof(char));
+		low_entrophy_packet_train[i] = malloc(packet_length * sizeof(char));
+		for (int j = 0; j < packet_length - 1; j++) {
 			if (j < 4) {
-				packet_train[i][j] = hold_num[j];
+				high_entrophy_packet_train[i][j] = hold_num[j];
+				low_entrophy_packet_train[i][j] = hold_num[j];
 			} else {
-				int rand_num = rand() % 10;
+				int rand_num = rand() % packet_length;
 				char hold_rand_num[2];
 				sprintf(hold_rand_num, "%d", rand_num);
-				// packet_train[i][j] = hold_rand_num[0];
-				packet_train[i][j] = '0'; // All 0's in
+				high_entrophy_packet_train[i][j] = hold_rand_num[0]; // All rand nums
+				low_entrophy_packet_train[i][j] = '0';
 			}
 		}
 
-		packet_train[i][PAYLOAD_SIZE - 1] = '\0'; // All 0's in
+		high_entrophy_packet_train[i][packet_length - 1] = '\0';
+		low_entrophy_packet_train[i][packet_length - 1] = '\0';
 	}
 
 	// Send message to server to indicate next packet will be start of Low Entrophy
 	// packet train. Let's server know to start timer
 	// Ensures the server gets the message. 
-	char* start_msg = "Start LOW UDP Train";
+	char* start_msg = malloc(256);
+	strcpy(start_msg, "Start LOW UDP Train");
 	int len = sizeof(servaddr);
 	while (strcmp(start_msg, buffer) != 0) {
 		sendto(sockfd, start_msg, strlen(start_msg), 
@@ -175,15 +184,45 @@ void probe_cli() {
 							&len);
 	}
 
-	// Sending Packet Train
-	for (int i = 0; i < sizeof(packet_train)/sizeof(packet_train[0]); i++) {
-		sendto(sockfd, (const char *)packet_train[i], strlen(packet_train[i]), 
+	// Sending Low Entrophy Packet Train
+	for (int i = 0; i < packet_train_length; i++) {
+		sendto(sockfd, (const char *)low_entrophy_packet_train[i], strlen(low_entrophy_packet_train[i]), 
 				MSG_CONFIRM, (const struct sockaddr *) &servaddr,  
 				sizeof(servaddr)); 
 	}
 
 	// Message to send to server to stop recording time
-	char* end_msg = "End LOW UDP Train";
+	char* end_msg = malloc(256); 
+	strcpy(end_msg, "End LOW UDP Train");
+	// Ensures the server gets the message. 
+	sendto(sockfd, end_msg, strlen(end_msg), 
+			MSG_CONFIRM, (const struct sockaddr *) &servaddr,  
+			sizeof(servaddr)); 
+
+	// Sleep for 15 seconds inbetween trains
+	sleep(SLEEP_DURATION);
+	
+	// Prepare to send High UDP Train
+	strcpy(start_msg, "Start HIGH UDP Train");
+	len = sizeof(servaddr);
+	while (strcmp(start_msg, buffer) != 0) {
+		sendto(sockfd, start_msg, strlen(start_msg), 
+				MSG_CONFIRM, (const struct sockaddr *) &servaddr,  
+				sizeof(servaddr)); 
+		rcvd_msg = recvfrom(sockfd, (char *)buffer, MAXLINE,
+							MSG_DONTWAIT, ( struct sockaddr *)&servaddr,
+							&len);
+	}
+
+	// Sending High Entrophy Packet Train
+	for (int i = 0; i < packet_train_length; i++) {
+		sendto(sockfd, (const char *)high_entrophy_packet_train[i], strlen(high_entrophy_packet_train[i]), 
+				MSG_CONFIRM, (const struct sockaddr *) &servaddr,  
+				sizeof(servaddr)); 
+	}
+
+	// Message to send to server to stop recording time
+	strcpy(end_msg, "End HIGH UDP Train");
 	// Ensures the server gets the message. 
 	sendto(sockfd, end_msg, strlen(end_msg), 
 			MSG_CONFIRM, (const struct sockaddr *) &servaddr,  
