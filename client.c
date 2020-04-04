@@ -16,7 +16,7 @@
 #define DST_IP   "192.168.56.101"
 
 #define MAXLINE  6000	
-#define MAX 	 800
+#define MAX 	 80
   
 #define SLEEP_DURATION 1
 #define PAYLOAD_SIZE 1002
@@ -241,7 +241,6 @@ void post_probe_cli() {
 	struct sockaddr_in servaddr; 
 
 	// Create TCP socket and make sure it was created successfully
-	sockfd = socket(AF_INET, SOCK_STREAM, 0); 
 	if ((sockfd = socket(AF_INET, SOCK_STREAM, 0)) < 0) { 
 		perror("socket creation failed..."); 
         exit(EXIT_FAILURE); 
@@ -263,13 +262,17 @@ void post_probe_cli() {
 	}
 
 	// Buffer to receive message from server on its findings
-    char buff[300]; 
-	bzero(buff, 300); 
+    char buff[MAX]; 
+	bzero(buff, sizeof(buff)); 
 	read(sockfd, buff, sizeof(buff));
 	printf("Server Findings: %s\n", buff); 
+	
+	while (read(sockfd, buff, sizeof(buff)) > 0) {
+		printf("Read; %s\n", buff);
+	}
   
     // Close the socket when done
-    close(sockfd); 
+    // close(sockfd); 
 }
 
 int main() { 

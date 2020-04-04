@@ -292,7 +292,9 @@ void post_probe_serv(char* compression_result) {
 	}
   
     // Send message to client
-	write(connfd, compression_result, sizeof(compression_result)); 
+	char buffff[100] = "A really really really really really long string\n";
+	write(connfd, buffff, sizeof(buffff)); 
+	// write(connfd, compression_result, sizeof(compression_result)); 
   
     // Close sockets when done
 	// close(connfd);
