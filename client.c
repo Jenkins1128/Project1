@@ -18,7 +18,7 @@
 #define MAXLINE  6000	
 #define MAX 	 800
   
-#define SLEEP_DURATION 5
+#define SLEEP_DURATION 1
 #define PAYLOAD_SIZE 1002
 #define SA struct sockaddr 
 
@@ -184,6 +184,7 @@ void probe_cli() {
 		rcvd_msg = recvfrom(sockfd, (char *)buffer, MAXLINE,
 							MSG_DONTWAIT, ( struct sockaddr *)&servaddr,
 							&len);
+		buffer[rcvd_msg] = '\0';
 	}
 
 	// Sending Low Entrophy Packet Train
@@ -214,6 +215,7 @@ void probe_cli() {
 		rcvd_msg = recvfrom(sockfd, (char *)buffer, MAXLINE,
 							MSG_DONTWAIT, ( struct sockaddr *)&servaddr,
 							&len);
+		buffer[rcvd_msg] = '\0';
 	}
 
 	// Sending High Entrophy Packet Train
@@ -261,11 +263,9 @@ void post_probe_cli() {
 	}
 
 	// Buffer to receive message from server on its findings
-    char buff[MAX]; 
-	bzero(buff, MAX); 
-	while(read(sockfd, buff, sizeof(buff)) > -2) {
-		printf("SOCK: %s\n", buff);
-	} 
+    char buff[300]; 
+	bzero(buff, 300); 
+	read(sockfd, buff, sizeof(buff));
 	printf("Server Findings: %s\n", buff); 
   
     // Close the socket when done
@@ -273,8 +273,8 @@ void post_probe_cli() {
 }
 
 int main() { 
-	pre_probe_cli();
-	probe_cli();
+	// pre_probe_cli();
+	// probe_cli();
 	post_probe_cli();
 	return 0;
 }
