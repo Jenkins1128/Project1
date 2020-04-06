@@ -9,11 +9,83 @@
 #include <netinet/in.h> 
 #include <sys/time.h>
   
-#define PORT      8765 
-#define TCP_PORT  8080
 #define MAXLINE   6000 
 #define MAX 80
 #define SA struct sockaddr 
+
+struct config {
+	char key[100];
+	char value[100];
+};
+
+struct config* create_config(int* count) {
+	FILE *fPtr = fopen("myconfig.json", "r");
+	int bufferSize = 1000;
+	char buffer[bufferSize];
+	int totalRead = 0;
+
+	if (fPtr == NULL) {
+		perror("Unable to open config file:");
+		exit(EXIT_FAILURE);
+	}
+
+	while (fgets(buffer, bufferSize, fPtr) != NULL) {
+		totalRead = strlen(buffer);
+
+		if (buffer[totalRead - 1] == '\n') {
+			buffer[totalRead - 1] = '\0';
+		} else {
+			buffer[totalRead - 1] = buffer[totalRead - 1];
+		}
+
+		(*count)++;
+	}
+	fclose(fPtr);
+	struct config* config_settings = malloc((*count) * sizeof(struct config));
+	return config_settings;
+}
+
+void populate_config(struct config* settings) {
+	int i = 0;
+
+	FILE *fPtr = fopen("myconfig.json", "r");
+	int bufferSize = 1000;
+	char buffer[bufferSize];
+	char key[100];
+	char value[100];
+	int totalRead = 0;
+
+	if (fPtr == NULL) {
+		perror("Unable to open config file:");
+		exit(EXIT_FAILURE);
+	}
+
+	while (fgets(buffer, bufferSize, fPtr) != NULL) {
+		totalRead = strlen(buffer);
+
+		if (buffer[totalRead - 1] == '\n') {
+			buffer[totalRead - 1] = '\0';
+		} else {
+			buffer[totalRead - 1] = buffer[totalRead - 1];
+		}
+
+		char delim[3] = ":";
+		strcpy(((struct config*)settings + i)->key, strtok(buffer, delim));
+		strcpy(((struct config*)settings + i)->value, strtok(NULL, delim));
+		++i;
+	}
+	fclose(fPtr);
+	return;
+}
+
+char* get_value(struct config* settings, char* key_name, int count) {
+	for (int i = 0; i < count; i++) {
+		if (strcmp((settings + i)->key, key_name) == 0) {
+			return (settings + i)->value;
+		}
+	}
+	return "NaN";
+}
 
 /* Function used to receive file */
 void recvFile(int sockfd) { 
@@ -70,7 +142,7 @@ long getMsTime() {
 }
 
 /* Function for pre probing phase */
-void pre_probe_server() {
+void pre_probe_server(int tcp_port) {
 	int sockfd, connfd, len;
 	struct sockaddr_in servaddr, cli;
 
@@ -92,7 +164,7 @@ void pre_probe_server() {
 	// Assign IP, PORT for server information
 	servaddr.sin_family = AF_INET;
 	servaddr.sin_addr.s_addr = htonl(INADDR_ANY);
-	servaddr.sin_port = htons(TCP_PORT); 
+	servaddr.sin_port = htons(tcp_port); 
 
 	// Binding newly created socket to given IP and verification 
 	if ((bind(sockfd, (SA*)&servaddr, sizeof(servaddr))) != 0) { 
@@ -125,7 +197,7 @@ void pre_probe_server() {
 /* Function for probing phase of server 
  * Returns compression results found
 */
-int probe_serv() {
+int probe_serv(int port) {
     int sockfd, len, rcvd; 
     char buffer[MAXLINE]; 
     struct sockaddr_in servaddr, cliaddr; 
@@ -136,7 +208,7 @@ int probe_serv() {
     // Filling server information 
     servaddr.sin_family = AF_INET;
 	servaddr.sin_addr.s_addr = htonl(INADDR_ANY); 
-    servaddr.sin_port = htons(PORT); 
+    servaddr.sin_port = htons(port); 
 
 	// Attempt to create socket 
     if ((sockfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) { 
@@ -241,7 +313,7 @@ int probe_serv() {
 }
 
 /* Post probing phase for client */
-void post_probe_serv(int compression_result) {
+void post_probe_serv(int compression_result, int tcp_port) {
 	int sockfd, connfd, len;
 	struct sockaddr_in servaddr, cli;
 
@@ -263,7 +335,7 @@ void post_probe_serv(int compression_result) {
 	// Assign IP, PORT for server information
 	servaddr.sin_family = AF_INET;
 	servaddr.sin_addr.s_addr = htonl(INADDR_ANY);
-	servaddr.sin_port = htons(TCP_PORT); 
+	servaddr.sin_port = htons(tcp_port); 
 
 	// Binding newly created socket to given IP and verification 
 	if ((bind(sockfd, (SA*)&servaddr, sizeof(servaddr))) != 0) { 
@@ -303,8 +375,18 @@ void post_probe_serv(int compression_result) {
   
 // Driver code 
 int main() { 
-	pre_probe_server();
-	int compression_result = probe_serv();
-	post_probe_serv(compression_result);
+	/* Config settings */
+	int settings_count = 0;
+	struct config* config_settings = create_config(&settings_count);
+
+	if (config_settings == NULL) {
+		perror("Error creating config settings");
+		return EXIT_FAILURE;
+	}
+
+	populate_config(config_settings);
+	pre_probe_server(atoi(get_value(config_settings, "tcp_prepost_port", settings_count)));
+	int compression_result = probe_serv(atoi(get_value(config_settings, "udp_dest_port", settings_count)));
+	post_probe_serv(compression_result, atoi(get_value(config_settings, "tcp_prepost_port", settings_count)));
 	return 0;
 }

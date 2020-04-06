@@ -8,19 +8,85 @@
 #include <netinet/in.h> 
 #include <time.h>
 #include <netdb.h> 
-  
-#define SRC_PORT 9876 
-
-#define DST_PORT 8765 
-#define TCP_PORT 8080
-#define DST_IP   "192.168.56.101"
 
 #define MAXLINE  6000	
 #define MAX 	 80
   
-#define SLEEP_DURATION 1
-#define PAYLOAD_SIZE 1002
 #define SA struct sockaddr 
+
+struct config {
+	char key[100];
+	char value[100];
+};
+
+struct config* create_config(int* count) {
+	FILE *fPtr = fopen("myconfig.json", "r");
+	int bufferSize = 1000;
+	char buffer[bufferSize];
+	int totalRead = 0;
+
+	if (fPtr == NULL) {
+		perror("Unable to open config file:");
+		exit(EXIT_FAILURE);
+	}
+
+	while (fgets(buffer, bufferSize, fPtr) != NULL) {
+		totalRead = strlen(buffer);
+
+		if (buffer[totalRead - 1] == '\n') {
+			buffer[totalRead - 1] = '\0';
+		} else {
+			buffer[totalRead - 1] = buffer[totalRead - 1];
+		}
+
+		(*count)++;
+	}
+	fclose(fPtr);
+	struct config* config_settings = malloc((*count) * sizeof(struct config));
+	return config_settings;
+}
+
+void populate_config(struct config* settings) {
+	int i = 0;
+
+	FILE *fPtr = fopen("myconfig.json", "r");
+	int bufferSize = 1000;
+	char buffer[bufferSize];
+	char key[100];
+	char value[100];
+	int totalRead = 0;
+
+	if (fPtr == NULL) {
+		perror("Unable to open config file:");
+		exit(EXIT_FAILURE);
+	}
+
+	while (fgets(buffer, bufferSize, fPtr) != NULL) {
+		totalRead = strlen(buffer);
+
+		if (buffer[totalRead - 1] == '\n') {
+			buffer[totalRead - 1] = '\0';
+		} else {
+			buffer[totalRead - 1] = buffer[totalRead - 1];
+		}
+
+		char delim[3] = ":";
+		strcpy(((struct config*)settings + i)->key, strtok(buffer, delim));
+		strcpy(((struct config*)settings + i)->value, strtok(NULL, delim));
+		++i;
+	}
+	fclose(fPtr);
+	return;
+}
+
+char* get_value(struct config* settings, char* key_name, int count) {
+	for (int i = 0; i < count; i++) {
+		if (strcmp((settings + i)->key, key_name) == 0) {
+			return (settings + i)->value;
+		}
+	}
+	return "NaN";
+}
 
 /* Function used to receive file */
 void recvFile(int sockfd) { 
@@ -69,7 +135,7 @@ void sentFile(int sockfd) {
 } 
 
 /* Function used for handling pre-phobing phase */
-void pre_probe_cli() {
+void pre_probe_cli(int tcp_port, char* dst_ip) {
 	int sockfd; 
 	struct sockaddr_in servaddr; 
 
@@ -89,8 +155,8 @@ void pre_probe_cli() {
 
 	// Assign IP, PORT for server information
 	servaddr.sin_family = AF_INET; 
-	servaddr.sin_addr.s_addr = inet_addr(DST_IP); 
-	servaddr.sin_port = htons(TCP_PORT); 
+	servaddr.sin_addr.s_addr = inet_addr(dst_ip); 
+	servaddr.sin_port = htons(tcp_port); 
 
 	// Connect client socket to server socket 
 	if (connect(sockfd, (SA*)&servaddr, sizeof(servaddr)) != 0) { 
@@ -105,7 +171,7 @@ void pre_probe_cli() {
 	close(sockfd); 
 }
 
-void probe_cli() {
+void probe_cli(int src_port, int dst_port, char* dst_ip, int payload_size, int packet_train_length, int imt) {
     int sockfd, rcvd_msg; 
     char buffer[MAXLINE]; 
     struct sockaddr_in servaddr, cliaddr; 
@@ -123,13 +189,13 @@ void probe_cli() {
 	// Assign IP, PORT for server information
     memset(&servaddr, 0, sizeof(servaddr)); 
     servaddr.sin_family = AF_INET; 
-    servaddr.sin_port = htons(DST_PORT); 
-    servaddr.sin_addr.s_addr = inet_addr(DST_IP); 
+    servaddr.sin_port = htons(dst_port); 
+    servaddr.sin_addr.s_addr = inet_addr(dst_ip); 
 
 	// Assign IP, PORT for client information (needed for making the right port)
 	memset(&cliaddr, 0, sizeof(cliaddr));
     cliaddr.sin_family = AF_INET; 
-    cliaddr.sin_port = htons(SRC_PORT); 
+    cliaddr.sin_port = htons(src_port); 
     cliaddr.sin_addr.s_addr = htonl(INADDR_ANY);
 
 	// Needed to make sure it shows right source port
@@ -142,8 +208,7 @@ void probe_cli() {
 	srand(time(0));	
 
 
-	int packet_train_length = 6000;
-	int packet_length = 1001;
+	int packet_length = payload_size + 1;
 	char **high_entrophy_packet_train = malloc(packet_train_length * sizeof(char*));
 	char **low_entrophy_packet_train = malloc(packet_train_length * sizeof(char*));
 	for (int i = 0; i < packet_train_length; i++) {
@@ -203,7 +268,7 @@ void probe_cli() {
 			sizeof(servaddr)); 
 
 	// Sleep for 15 seconds inbetween trains
-	sleep(SLEEP_DURATION);
+	sleep(imt);
 	
 	// Prepare to send High UDP Train
 	strcpy(start_msg, "Start HIGH UDP Train");
@@ -236,7 +301,7 @@ void probe_cli() {
     close(sockfd); 
 }
 
-void post_probe_cli() {
+void post_probe_cli(int tcp_port, char* dst_ip) {
 	int sockfd; 
 	struct sockaddr_in servaddr; 
 
@@ -253,8 +318,8 @@ void post_probe_cli() {
 
 	// Assign IP, PORT for server information
 	servaddr.sin_family = AF_INET; 
-	servaddr.sin_addr.s_addr = inet_addr(DST_IP); 
-	servaddr.sin_port = htons(TCP_PORT); 
+	servaddr.sin_addr.s_addr = inet_addr(dst_ip); 
+	servaddr.sin_port = htons(tcp_port); 
 
 	// Keep attempting a connection to the server until one is achieved.
     while (connect(sockfd, (SA*)&servaddr, sizeof(servaddr)) != 0) { 
@@ -271,8 +336,26 @@ void post_probe_cli() {
 }
 
 int main() { 
-	pre_probe_cli();
-	probe_cli();
-	post_probe_cli();
+	/* Config settings */
+	int settings_count = 0;
+	struct config* config_settings = create_config(&settings_count);
+
+	if (config_settings == NULL) {
+		perror("Error creating config settings");
+		return EXIT_FAILURE;
+	}
+
+	populate_config(config_settings);
+
+	pre_probe_cli(	atoi(get_value(config_settings, "tcp_prepost_port", settings_count)),
+					get_value(config_settings, "server_ip", settings_count));
+	probe_cli(	atoi(get_value(config_settings, "udp_source_port", settings_count)), 
+				atoi(get_value(config_settings, "udp_dest_port", settings_count)),
+				get_value(config_settings, "server_ip", settings_count),
+				atoi(get_value(config_settings, "udp_payload_size", settings_count)),
+				atoi(get_value(config_settings, "packet_train_length", settings_count)),
+				atoi(get_value(config_settings, "imt", settings_count)));
+	post_probe_cli(	atoi(get_value(config_settings, "tcp_prepost_port", settings_count)),
+					get_value(config_settings, "server_ip", settings_count));
 	return 0;
 }
