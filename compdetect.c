@@ -106,9 +106,6 @@ unsigned short csum(unsigned short *buf, int len)
         return (unsigned short)(~sum);
 }
 
-
-
-
 /* UDP CONFIG */
 
 #define IP4_HDRLEN 20         // IPv4 header length
@@ -125,6 +122,7 @@ int *allocate_intmem (int);
 /* TIMER CONFIG */
 #define THRESHOLD 0.1 //100ms
 
+/* Creates config */
 struct config* create_config(int* count, char* config_file) {
 	FILE *fPtr = fopen(config_file, "r");
 	int bufferSize = 1000;
@@ -152,6 +150,7 @@ struct config* create_config(int* count, char* config_file) {
 	return config_settings;
 }
 
+/* Populate config file */
 void populate_config(struct config* settings, char* config_file) {
 	int i = 0;
 
@@ -185,6 +184,7 @@ void populate_config(struct config* settings, char* config_file) {
 	return;
 }
 
+/* Gets value from config file, Key -> Value */
 char* get_value(struct config* settings, char* key_name, int count) {
 	for (int i = 0; i < count; i++) {
 		if (strcmp((settings + i)->key, key_name) == 0) {
