@@ -1,0 +1,10 @@
+server_ip:192.168.56.101
+udp_source_port:9876
+udp_dest_port:8765
+tcp_dest_head_port:insert
+tcp_dest_tail_port:insert
+tcp_prepost_port:8080
+udp_payload_size:1000
+imt:15
+packet_train_length:6000
+udp_ttl:255
