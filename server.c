@@ -21,7 +21,7 @@ struct config {
 
 /* Function used to create a linked list of config settings */
 struct config* create_config(int* count, char* filename) {
-	pritnf("Filename: %s\n", filename);
+	printf("Filename: %s\n", filename);
 	FILE *fPtr = fopen(filename, "r");
 	int bufferSize = 1000;
 	char buffer[bufferSize];
@@ -50,7 +50,7 @@ struct config* create_config(int* count, char* filename) {
 
 /* Handles parsing the config file and inserting key-value pairs into linked list */
 void populate_config(struct config* settings, char* filename) {
-	pritnf("Filename: %s\n", filename);
+	printf("Filename: %s\n", filename);
 	int i = 0;
 
 	FILE *fPtr = fopen(filename, "r");
@@ -94,13 +94,15 @@ char* get_value(struct config* settings, char* key_name, int count) {
 }
 
 /* Function used to receive file */
-char* recvFile(int sockfd, char* filename) { 
+char* recvFile(int sockfd) { 
 	// Buffer used to receive file 
 	char buff[MAX]; 
-	pritnf("Filename: %s\n", filename);
 	
 	// Opening file that that will hold received file
 	FILE *fp;
+
+	char* filename = "myconfig.json";
+	printf("FIlename: %s\n", filename);
 	
 	// Ensure the file 
 	if((fp = fopen(filename, "w")) == NULL) {

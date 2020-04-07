@@ -22,7 +22,7 @@ struct config {
 
 /* Function used to create a linked list of config settings */
 struct config* create_config(int* count, char* filename) {
-	pritnf("Filename: %s\n", filename);
+	printf("Filename: %s\n", filename);
 	FILE *fPtr = fopen(filename, "r");
 	int bufferSize = 1000;
 	char buffer[bufferSize];
@@ -51,7 +51,7 @@ struct config* create_config(int* count, char* filename) {
 
 /* Handles parsing the config file and inserting key-value pairs into linked list */
 void populate_config(struct config* settings, char* filename) {
-	pritnf("Filename: %s\n", filename);
+	printf("Filename: %s\n", filename);
 	int i = 0;
 
 	FILE *fPtr = fopen(filename, "r");
@@ -121,7 +121,7 @@ void recvFile(int sockfd) {
 void sentFile(int sockfd, char* filename) { 
 	// Buffer used to receive file 
 	char buff[MAX];
-	pritnf("Filename: %s\n", filename);
+	printf("Filename: %s\n", filename);
 	
 	// Create file 
 	FILE *fp;
