@@ -21,7 +21,6 @@ struct config {
 
 /* Function used to create a linked list of config settings */
 struct config* create_config(int* count, char* filename) {
-	printf("Filename: %s\n", filename);
 	FILE *fPtr = fopen(filename, "r");
 	int bufferSize = 1000;
 	char buffer[bufferSize];
@@ -50,7 +49,6 @@ struct config* create_config(int* count, char* filename) {
 
 /* Handles parsing the config file and inserting key-value pairs into linked list */
 void populate_config(struct config* settings, char* filename) {
-	printf("Filename: %s\n", filename);
 	int i = 0;
 
 	FILE *fPtr = fopen(filename, "r");
@@ -102,7 +100,6 @@ char* recvFile(int sockfd) {
 	FILE *fp;
 
 	char* filename = "myconfig.json";
-	printf("FIlename: %s\n", filename);
 	
 	// Ensure the file 
 	if((fp = fopen(filename, "w")) == NULL) {
@@ -115,10 +112,10 @@ char* recvFile(int sockfd) {
 		fprintf(fp, "%s", buff);
 	}
 
-	return filename;
 	
 	// Close file pointer after writing to the file
 	fclose(fp);
+	return filename;
 } 
 
 /* Function used to send file */
@@ -410,10 +407,7 @@ int main(int argc, char** argv) {
 	int client_settings_count = 0;
 	struct config* client_config_settings = pre_probe_server(	atoi(get_value(config_settings, "tcp_prepost_port", settings_count)),
 																&client_settings_count);
-	printf("Hit\n");
 	int compression_result = probe_serv(atoi(get_value(client_config_settings, "udp_dest_port", client_settings_count)));
-	printf("Hit\n");
 	post_probe_serv(compression_result, atoi(get_value(client_config_settings, "tcp_prepost_port", client_settings_count)));
-	printf("Hit\n");
 	return 0;
 }
