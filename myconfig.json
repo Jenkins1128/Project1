@@ -1,6 +1,6 @@
 source_ip:192.168.239.218
 server_ip:192.168.239.219
-p1_server_ip:192.165.56.101
+p1_server_ip:192.168.56.101
 udp_source_port:9876
 udp_dest_port:8765
 tcp_source_port:8755

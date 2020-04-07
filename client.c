@@ -162,6 +162,7 @@ void pre_probe_cli(int tcp_port, char* dst_ip) {
 	servaddr.sin_addr.s_addr = inet_addr(dst_ip); 
 	servaddr.sin_port = htons(tcp_port); 
 
+	printf("TCPPORT: %d:::%s\n", tcp_port,dst_ip);
 	// Connect client socket to server socket 
 	if (connect(sockfd, (SA*)&servaddr, sizeof(servaddr)) != 0) { 
 		perror("connection with the server failed..."); 
@@ -353,16 +354,13 @@ int main(int argc, char** argv) {
 
 	pre_probe_cli(	atoi(get_value(config_settings, "tcp_prepost_port", settings_count)),
 					get_value(config_settings, "p1_server_ip", settings_count));
-	printf("Hit\n");
 	probe_cli(	atoi(get_value(config_settings, "udp_source_port", settings_count)), 
 				atoi(get_value(config_settings, "udp_dest_port", settings_count)),
-				get_value(config_settings, "server_ip", settings_count),
+				get_value(config_settings, "p1_server_ip", settings_count),
 				atoi(get_value(config_settings, "udp_payload_size", settings_count)),
 				atoi(get_value(config_settings, "packet_train_length", settings_count)),
 				atoi(get_value(config_settings, "imt", settings_count)));
-	printf("Hit\n");
 	post_probe_cli(	atoi(get_value(config_settings, "tcp_prepost_port", settings_count)),
 					get_value(config_settings, "p1_server_ip", settings_count));
-	printf("Hit\n");
 	return 0;
 }
