@@ -18,8 +18,8 @@ struct config {
 	char value[100];
 };
 
-struct config* create_config(int* count) {
-	FILE *fPtr = fopen("myconfig.json", "r");
+struct config* create_config(int* count, char* filename) {
+	FILE *fPtr = fopen(filename, "r");
 	int bufferSize = 1000;
 	char buffer[bufferSize];
 	int totalRead = 0;
@@ -374,10 +374,10 @@ void post_probe_serv(int compression_result, int tcp_port) {
 }
   
 // Driver code 
-int main() { 
+int main(int argc, char** argv) { 
 	/* Config settings */
 	int settings_count = 0;
-	struct config* config_settings = create_config(&settings_count);
+	struct config* config_settings = create_config(&settings_count, argv[1]);
 
 	if (config_settings == NULL) {
 		perror("Error creating config settings");
