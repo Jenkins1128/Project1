@@ -48,22 +48,22 @@ struct config* create_config(int* count, char* filename) {
 }
 
 /* Handles parsing the config file and inserting key-value pairs into linked list */
-void populate_config(struct config* settings) {
+void populate_config(struct config* settings, char* filename) {
 	int i = 0;
 
-	FILE *fPtr = fopen("myconfig.json", "r");
+	printf("Hit1\n");
+	FILE *fPtr = fopen(filename, "r");
 	int bufferSize = 1000;
 	char buffer[bufferSize];
 	char key[100];
 	char value[100];
 	int totalRead = 0;
-	printf("Hit1\n");
+	printf("Hit2\n");
 
 	if (fPtr == NULL) {
 		perror("Unable to open config file:");
 		exit(EXIT_FAILURE);
 	}
-	printf("Hit2\n");
 
 	while (fgets(buffer, bufferSize, fPtr) != NULL) {
 		totalRead = strlen(buffer);
@@ -73,15 +73,12 @@ void populate_config(struct config* settings) {
 		} else {
 			buffer[totalRead - 1] = buffer[totalRead - 1];
 		}
-		printf("Buffer: %s\n", buffer);
 
 		char delim[3] = ":";
 		strcpy(((struct config*)settings + i)->key, strtok(buffer, delim));
 		strcpy(((struct config*)settings + i)->value, strtok(NULL, delim));
-		printf("Hit4\n");
 		++i;
 	}
-	printf("Hit3\n");
 	fclose(fPtr);
 	return;
 }
@@ -97,15 +94,16 @@ char* get_value(struct config* settings, char* key_name, int count) {
 }
 
 /* Function used to receive file */
-void recvFile(int sockfd) { 
+char* recvFile(int sockfd) { 
 	// Buffer used to receive file 
 	char buff[MAX]; 
+	char *filename = "myconfig.json";
 	
 	// Opening file that that will hold received file
 	FILE *fp;
 	
 	// Ensure the file 
-	if((fp = fopen("received.c", "w")) == NULL) {
+	if((fp = fopen(filename, "w")) == NULL) {
 		perror("Error IN Opening File");
 		exit(EXIT_FAILURE);
 	}
@@ -114,6 +112,8 @@ void recvFile(int sockfd) {
 	while(read(sockfd, buff, MAX) > 0) {
 		fprintf(fp, "%s", buff);
 	}
+
+	return filename;
 	
 	// Close file pointer after writing to the file
 	fclose(fp);
@@ -151,7 +151,7 @@ long getMsTime() {
 }
 
 /* Function for pre probing phase */
-void pre_probe_server(int tcp_port) {
+struct config* pre_probe_server(int tcp_port, int *count) {
 	int sockfd, connfd, len;
 	struct sockaddr_in servaddr, cli;
 
@@ -197,10 +197,20 @@ void pre_probe_server(int tcp_port) {
 	}
 
 	// Receive the file client is attempting to send
-	recvFile(connfd); 
+	char* filename = recvFile(connfd); 
+	struct config* config_settings = create_config(count, filename);
+
+	if (config_settings == NULL) {
+		perror("Error creating config settings");
+		exit(EXIT_FAILURE);
+	}
+
+	populate_config(config_settings, filename);
 
 	// After receiving file, close the socket 
 	close(sockfd); 
+
+	return config_settings;
 }
 
 /* Function for probing phase of server 
@@ -387,18 +397,23 @@ int main(int argc, char** argv) {
 	/* Config settings */
 	int settings_count = 0;
 	struct config* config_settings = create_config(&settings_count, argv[1]);
+	printf("Hit\n");
 
 	if (config_settings == NULL) {
 		perror("Error creating config settings");
 		return EXIT_FAILURE;
 	}
-
 	printf("Hit\n");
-	populate_config(config_settings);
 
+	populate_config(config_settings, argv[1]);
 	printf("Hit\n");
-	pre_probe_server(atoi(get_value(config_settings, "tcp_prepost_port", settings_count)));
-	int compression_result = probe_serv(atoi(get_value(config_settings, "udp_dest_port", settings_count)));
-	post_probe_serv(compression_result, atoi(get_value(config_settings, "tcp_prepost_port", settings_count)));
+
+	int client_settings_count = 0;
+	struct config* client_config_settings = pre_probe_server(	atoi(get_value(config_settings, "tcp_prepost_port", settings_count)),
+																&client_settings_count);
+	printf("Hit\n");
+	int compression_result = probe_serv(atoi(get_value(client_config_settings, "udp_dest_port", client_settings_count)));
+	printf("Hit\n");
+	post_probe_serv(compression_result, atoi(get_value(client_config_settings, "tcp_prepost_port", client_settings_count)));
 	return 0;
 }

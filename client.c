@@ -116,7 +116,7 @@ void recvFile(int sockfd) {
 } 
 
 /* Function used to send file */
-void sentFile(int sockfd) { 
+void sentFile(int sockfd, char* filename) { 
 	// Buffer used to receive file 
 	char buff[MAX];
 	
@@ -124,7 +124,7 @@ void sentFile(int sockfd) {
 	FILE *fp;
 
 	// Open file and ensure it opens
-	if((fp=fopen("client.c", "r")) == NULL) {
+	if((fp=fopen(filename, "r")) == NULL) {
 		perror("Error IN Opening File .. ");
 		return ;
 	}
@@ -139,7 +139,7 @@ void sentFile(int sockfd) {
 } 
 
 /* Function used for handling pre-phobing phase */
-void pre_probe_cli(int tcp_port, char* dst_ip) {
+void pre_probe_cli(int tcp_port, char* dst_ip, char* filename) {
 	int sockfd; 
 	struct sockaddr_in servaddr; 
 
@@ -170,7 +170,7 @@ void pre_probe_cli(int tcp_port, char* dst_ip) {
 	} 
 
 	// Send config file
-	sentFile(sockfd); 
+	sentFile(sockfd, filename); 
 
 	// Close the socket 
 	close(sockfd); 
@@ -353,7 +353,8 @@ int main(int argc, char** argv) {
 	populate_config(config_settings);
 
 	pre_probe_cli(	atoi(get_value(config_settings, "tcp_prepost_port", settings_count)),
-					get_value(config_settings, "p1_server_ip", settings_count));
+					get_value(config_settings, "p1_server_ip", settings_count),
+					argv[1]);
 	probe_cli(	atoi(get_value(config_settings, "udp_source_port", settings_count)), 
 				atoi(get_value(config_settings, "udp_dest_port", settings_count)),
 				get_value(config_settings, "p1_server_ip", settings_count),
