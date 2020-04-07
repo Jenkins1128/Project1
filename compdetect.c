@@ -257,17 +257,11 @@ int main(int argc, char *argv[])
 	   perror("socket() error");
 	   exit(-1);
 	}
-	else
-	{
-	  printf("socket()-SOCK_RAW and tcp protocol is OK.\n");
-	}
 	/* Setting socket options, telling kernal we have custom headers*/
 	if(setsockopt(sd, IPPROTO_IP, IP_HDRINCL, val, sizeof(one)) < 0)
 	{
 	   perror("setsockopt() error");
 	   exit(-1);
-	}else{
-	  printf("setsockopt() is OK\n");
 	}
 	/* Address family */
 	din.sin_family = AF_INET;
@@ -526,9 +520,9 @@ int main(int argc, char *argv[])
 	double time_taken = ((double)t)/CLOCKS_PER_SEC; //seconds 
 	/* Checking whether compression was detected */
 	if(time_taken > THRESHOLD){
-	   printf("\nTime: %f Compression Detected! \n", time_taken); 
+	   printf("Time: %f Compression Detected! \n", time_taken); 
 	}else{
-	   printf("\nTime: %f No compression was detected. \n", time_taken);  
+	   printf("Time: %f No compression was detected. \n", time_taken);  
 	}
 	 
 	close(sd);
