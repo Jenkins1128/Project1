@@ -13,11 +13,13 @@
 #define MAX 80
 #define SA struct sockaddr 
 
+/* Nodes that will be used as settings for linked list */
 struct config {
 	char key[100];
 	char value[100];
 };
 
+/* Function used to create a linked list of config settings */
 struct config* create_config(int* count, char* filename) {
 	FILE *fPtr = fopen(filename, "r");
 	int bufferSize = 1000;
@@ -45,6 +47,7 @@ struct config* create_config(int* count, char* filename) {
 	return config_settings;
 }
 
+/* Handles parsing the config file and inserting key-value pairs into linked list */
 void populate_config(struct config* settings) {
 	int i = 0;
 
@@ -78,6 +81,7 @@ void populate_config(struct config* settings) {
 	return;
 }
 
+/* Gets value of any setting from linked list */
 char* get_value(struct config* settings, char* key_name, int count) {
 	for (int i = 0; i < count; i++) {
 		if (strcmp((settings + i)->key, key_name) == 0) {
@@ -221,7 +225,7 @@ int probe_serv(int port) {
 	int sso_return = setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on));
       
     // Bind the socket with the server address 
-    if (bind(sockfd, (const struct sockaddr *)&servaddr, sizeof(servaddr)) < 0) { 
+    if (bind(sockfd, (const SA*)&servaddr, sizeof(servaddr)) < 0) { 
         perror("bind failed"); 
         exit(EXIT_FAILURE); 
     } 
@@ -242,14 +246,14 @@ int probe_serv(int port) {
 	// Wait for server to receive start_msg from client, then continue
 	while (strcmp(buffer, start_msg) != 0) {
 		rcvd = recvfrom(sockfd, (char *)buffer, MAXLINE,  
-					MSG_WAITALL, ( struct sockaddr *) &cliaddr, 
+					MSG_WAITALL, ( struct SA*) &cliaddr, 
 					&len); 
 		buffer[rcvd] = '\0';
 	}
 	
 	// Send msg to client to let it know to start sending packet train 
 	sendto(sockfd, start_msg, strlen(start_msg),
-			MSG_CONFIRM, (const struct sockaddr *) &cliaddr,
+			MSG_CONFIRM, (const struct SA*) &cliaddr,
 			sizeof(cliaddr));
 
 	// Get start time
@@ -258,7 +262,7 @@ int probe_serv(int port) {
 	// Keep receiving packets until end_msg is received
 	while (strcmp(buffer, end_msg) != 0) {
 		rcvd = recvfrom(sockfd, (char *)buffer, MAXLINE,  
-					MSG_WAITALL, ( struct sockaddr *) &cliaddr, 
+					MSG_WAITALL, ( struct SA*) &cliaddr, 
 					&len); 
 		buffer[rcvd] = '\0';
 	}
@@ -278,14 +282,14 @@ int probe_serv(int port) {
 	// to let server know packet train coming next
 	while (strcmp(buffer, start_msg) != 0) {
 		rcvd = recvfrom(sockfd, (char *)buffer, MAXLINE,  
-					MSG_WAITALL, ( struct sockaddr *) &cliaddr, 
+					MSG_WAITALL, ( struct SA*) &cliaddr, 
 					&len); 
 		buffer[rcvd] = '\0';
 	}
 
 	// Send message back to client to let it know it is ready
 	sendto(sockfd, start_msg, strlen(start_msg),
-			MSG_CONFIRM, (const struct sockaddr *) &cliaddr,
+			MSG_CONFIRM, (const struct SA*) &cliaddr,
 			sizeof(cliaddr));
 
 	// Get start time
@@ -294,7 +298,7 @@ int probe_serv(int port) {
 	// Keep receiving packets until end_msg is received
 	while (strcmp(buffer, end_msg) != 0) {
 		rcvd = recvfrom(sockfd, (char *)buffer, MAXLINE,  
-					MSG_WAITALL, ( struct sockaddr *) &cliaddr, 
+					MSG_WAITALL, ( struct SA*) &cliaddr, 
 					&len); 
 		buffer[rcvd] = '\0';
 	}

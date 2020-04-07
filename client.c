@@ -14,11 +14,13 @@
   
 #define SA struct sockaddr 
 
+/* Nodes that will be used as settings for linked list */
 struct config {
 	char key[100];
 	char value[100];
 };
 
+/* Function used to create a linked list of config settings */
 struct config* create_config(int* count, char* filename) {
 	FILE *fPtr = fopen(filename, "r");
 	int bufferSize = 1000;
@@ -46,6 +48,7 @@ struct config* create_config(int* count, char* filename) {
 	return config_settings;
 }
 
+/* Handles parsing the config file and inserting key-value pairs into linked list */
 void populate_config(struct config* settings) {
 	int i = 0;
 
@@ -79,6 +82,7 @@ void populate_config(struct config* settings) {
 	return;
 }
 
+/* Gets value of any setting from linked list */
 char* get_value(struct config* settings, char* key_name, int count) {
 	for (int i = 0; i < count; i++) {
 		if (strcmp((settings + i)->key, key_name) == 0) {
@@ -199,7 +203,7 @@ void probe_cli(int src_port, int dst_port, char* dst_ip, int payload_size, int p
     cliaddr.sin_addr.s_addr = htonl(INADDR_ANY);
 
 	// Needed to make sure it shows right source port
-	if (bind(sockfd, (struct sockaddr *) &cliaddr, sizeof(cliaddr)) < 0) {
+	if (bind(sockfd, (SA*) &cliaddr, sizeof(cliaddr)) < 0) {
 		perror("bind error");
 		exit(EXIT_FAILURE);
 	}
@@ -244,7 +248,7 @@ void probe_cli(int src_port, int dst_port, char* dst_ip, int payload_size, int p
 	int len = sizeof(servaddr);
 	while (strcmp(start_msg, buffer) != 0) {
 		sendto(sockfd, start_msg, strlen(start_msg), 
-				MSG_CONFIRM, (const struct sockaddr *) &servaddr,  
+				MSG_CONFIRM, (const SA*) &servaddr,  
 				sizeof(servaddr)); 
 		rcvd_msg = recvfrom(sockfd, (char *)buffer, MAXLINE,
 							MSG_DONTWAIT, ( struct sockaddr *)&servaddr,
@@ -255,7 +259,7 @@ void probe_cli(int src_port, int dst_port, char* dst_ip, int payload_size, int p
 	// Sending Low Entrophy Packet Train
 	for (int i = 0; i < packet_train_length; i++) {
 		sendto(sockfd, (const char *)low_entrophy_packet_train[i], strlen(low_entrophy_packet_train[i]), 
-				MSG_CONFIRM, (const struct sockaddr *) &servaddr,  
+				MSG_CONFIRM, (const SA*) &servaddr,  
 				sizeof(servaddr)); 
 	}
 
@@ -264,7 +268,7 @@ void probe_cli(int src_port, int dst_port, char* dst_ip, int payload_size, int p
 	strcpy(end_msg, "End LOW UDP Train");
 	// Ensures the server gets the message. 
 	sendto(sockfd, end_msg, strlen(end_msg), 
-			MSG_CONFIRM, (const struct sockaddr *) &servaddr,  
+			MSG_CONFIRM, (const SA*) &servaddr,  
 			sizeof(servaddr)); 
 
 	// Sleep for 15 seconds inbetween trains
@@ -275,10 +279,10 @@ void probe_cli(int src_port, int dst_port, char* dst_ip, int payload_size, int p
 	len = sizeof(servaddr);
 	while (strcmp(start_msg, buffer) != 0) {
 		sendto(sockfd, start_msg, strlen(start_msg), 
-				MSG_CONFIRM, (const struct sockaddr *) &servaddr,  
+				MSG_CONFIRM, (const SA*) &servaddr,  
 				sizeof(servaddr)); 
 		rcvd_msg = recvfrom(sockfd, (char *)buffer, MAXLINE,
-							MSG_DONTWAIT, ( struct sockaddr *)&servaddr,
+							MSG_DONTWAIT, (SA*)&servaddr,
 							&len);
 		buffer[rcvd_msg] = '\0';
 	}
@@ -286,7 +290,7 @@ void probe_cli(int src_port, int dst_port, char* dst_ip, int payload_size, int p
 	// Sending High Entrophy Packet Train
 	for (int i = 0; i < packet_train_length; i++) {
 		sendto(sockfd, (const char *)high_entrophy_packet_train[i], strlen(high_entrophy_packet_train[i]), 
-				MSG_CONFIRM, (const struct sockaddr *) &servaddr,  
+				MSG_CONFIRM, (const SA*) &servaddr,  
 				sizeof(servaddr)); 
 	}
 
@@ -294,7 +298,7 @@ void probe_cli(int src_port, int dst_port, char* dst_ip, int payload_size, int p
 	strcpy(end_msg, "End HIGH UDP Train");
 	// Ensures the server gets the message. 
 	sendto(sockfd, end_msg, strlen(end_msg), 
-			MSG_CONFIRM, (const struct sockaddr *) &servaddr,  
+			MSG_CONFIRM, (const SA*) &servaddr,  
 			sizeof(servaddr)); 
 
 	// Close socket when done
