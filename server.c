@@ -51,14 +51,12 @@ struct config* create_config(int* count, char* filename) {
 void populate_config(struct config* settings, char* filename) {
 	int i = 0;
 
-	printf("Hit1\n");
 	FILE *fPtr = fopen(filename, "r");
 	int bufferSize = 1000;
 	char buffer[bufferSize];
 	char key[100];
 	char value[100];
 	int totalRead = 0;
-	printf("Hit2\n");
 
 	if (fPtr == NULL) {
 		perror("Unable to open config file:");
@@ -397,16 +395,13 @@ int main(int argc, char** argv) {
 	/* Config settings */
 	int settings_count = 0;
 	struct config* config_settings = create_config(&settings_count, argv[1]);
-	printf("Hit\n");
 
 	if (config_settings == NULL) {
 		perror("Error creating config settings");
 		return EXIT_FAILURE;
 	}
-	printf("Hit\n");
 
 	populate_config(config_settings, argv[1]);
-	printf("Hit\n");
 
 	int client_settings_count = 0;
 	struct config* client_config_settings = pre_probe_server(	atoi(get_value(config_settings, "tcp_prepost_port", settings_count)),
@@ -415,5 +410,6 @@ int main(int argc, char** argv) {
 	int compression_result = probe_serv(atoi(get_value(client_config_settings, "udp_dest_port", client_settings_count)));
 	printf("Hit\n");
 	post_probe_serv(compression_result, atoi(get_value(client_config_settings, "tcp_prepost_port", client_settings_count)));
+	printf("Hit\n");
 	return 0;
 }

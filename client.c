@@ -49,10 +49,10 @@ struct config* create_config(int* count, char* filename) {
 }
 
 /* Handles parsing the config file and inserting key-value pairs into linked list */
-void populate_config(struct config* settings) {
+void populate_config(struct config* settings, char* filename) {
 	int i = 0;
 
-	FILE *fPtr = fopen("myconfig.json", "r");
+	FILE *fPtr = fopen(filename, "r");
 	int bufferSize = 1000;
 	char buffer[bufferSize];
 	char key[100];
@@ -350,7 +350,7 @@ int main(int argc, char** argv) {
 		return EXIT_FAILURE;
 	}
 
-	populate_config(config_settings);
+	populate_config(config_settings, argv[1]);
 
 	pre_probe_cli(	atoi(get_value(config_settings, "tcp_prepost_port", settings_count)),
 					get_value(config_settings, "p1_server_ip", settings_count),
