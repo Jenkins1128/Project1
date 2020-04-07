@@ -100,7 +100,7 @@ void recvFile(int sockfd) {
 	FILE *fp;
 	
 	// Ensure the file 
-	if((fp = fopen("received.c", "w")) == NULL) {
+	if((fp = fopen("myconfig.json", "w")) == NULL) {
 		perror("Error IN Opening File");
 		exit(EXIT_FAILURE);
 	}
@@ -146,7 +146,7 @@ long getMsTime() {
 }
 
 /* Function for pre probing phase */
-void pre_probe_server(int tcp_port) {
+struct config* pre_probe_server(int tcp_port, int* count, char* filename) {
 	int sockfd, connfd, len;
 	struct sockaddr_in servaddr, cli;
 
@@ -193,9 +193,22 @@ void pre_probe_server(int tcp_port) {
 
 	// Receive the file client is attempting to send
 	recvFile(connfd); 
+	int temp_settings_count = 0;
+	struct config* config_settings = create_config(&temp_settings_count, filename);
+	
+	*count = temp_settings_count;
+
+	if (config_settings == NULL) {
+		perror("Error creating config settings");
+		exit(EXIT_FAILURE);
+	}
+
+	populate_config(config_settings);
 
 	// After receiving file, close the socket 
 	close(sockfd); 
+
+	return config_settings;
 }
 
 /* Function for probing phase of server 
@@ -381,15 +394,7 @@ void post_probe_serv(int compression_result, int tcp_port) {
 int main(int argc, char** argv) { 
 	/* Config settings */
 	int settings_count = 0;
-	struct config* config_settings = create_config(&settings_count, argv[1]);
-
-	if (config_settings == NULL) {
-		perror("Error creating config settings");
-		return EXIT_FAILURE;
-	}
-
-	populate_config(config_settings);
-	pre_probe_server(atoi(get_value(config_settings, "tcp_prepost_port", settings_count)));
+	struct config* config_settings = pre_probe_server(8080, &settings_count, argv[1]);
 	int compression_result = probe_serv(atoi(get_value(config_settings, "udp_dest_port", settings_count)));
 	post_probe_serv(compression_result, atoi(get_value(config_settings, "tcp_prepost_port", settings_count)));
 	return 0;
