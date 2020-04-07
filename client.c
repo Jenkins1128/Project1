@@ -352,14 +352,17 @@ int main(int argc, char** argv) {
 	populate_config(config_settings);
 
 	pre_probe_cli(	atoi(get_value(config_settings, "tcp_prepost_port", settings_count)),
-					get_value(config_settings, "server_ip", settings_count));
+					get_value(config_settings, "p1_server_ip", settings_count));
+	printf("Hit\n");
 	probe_cli(	atoi(get_value(config_settings, "udp_source_port", settings_count)), 
 				atoi(get_value(config_settings, "udp_dest_port", settings_count)),
 				get_value(config_settings, "server_ip", settings_count),
 				atoi(get_value(config_settings, "udp_payload_size", settings_count)),
 				atoi(get_value(config_settings, "packet_train_length", settings_count)),
 				atoi(get_value(config_settings, "imt", settings_count)));
+	printf("Hit\n");
 	post_probe_cli(	atoi(get_value(config_settings, "tcp_prepost_port", settings_count)),
-					get_value(config_settings, "server_ip", settings_count));
+					get_value(config_settings, "p1_server_ip", settings_count));
+	printf("Hit\n");
 	return 0;
 }
