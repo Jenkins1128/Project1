@@ -324,7 +324,7 @@ int main(int argc, char *argv[])
 	   perror("sendto() error");
 	   exit(-1);
 	}else{
-		sleep(.5);
+		sleep(1);
 	}
 
 	/* ----  UDP PACKET TRAIN  ---- */
