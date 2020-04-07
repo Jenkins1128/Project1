@@ -57,11 +57,13 @@ void populate_config(struct config* settings) {
 	char key[100];
 	char value[100];
 	int totalRead = 0;
+	printf("Hit1\n");
 
 	if (fPtr == NULL) {
 		perror("Unable to open config file:");
 		exit(EXIT_FAILURE);
 	}
+	printf("Hit2\n");
 
 	while (fgets(buffer, bufferSize, fPtr) != NULL) {
 		totalRead = strlen(buffer);
@@ -71,12 +73,15 @@ void populate_config(struct config* settings) {
 		} else {
 			buffer[totalRead - 1] = buffer[totalRead - 1];
 		}
+		printf("Buffer: %s\n", buffer);
 
 		char delim[3] = ":";
 		strcpy(((struct config*)settings + i)->key, strtok(buffer, delim));
 		strcpy(((struct config*)settings + i)->value, strtok(NULL, delim));
+		printf("Hit4\n");
 		++i;
 	}
+	printf("Hit3\n");
 	fclose(fPtr);
 	return;
 }
@@ -388,7 +393,10 @@ int main(int argc, char** argv) {
 		return EXIT_FAILURE;
 	}
 
+	printf("Hit\n");
 	populate_config(config_settings);
+
+	printf("Hit\n");
 	pre_probe_server(atoi(get_value(config_settings, "tcp_prepost_port", settings_count)));
 	int compression_result = probe_serv(atoi(get_value(config_settings, "udp_dest_port", settings_count)));
 	post_probe_serv(compression_result, atoi(get_value(config_settings, "tcp_prepost_port", settings_count)));
