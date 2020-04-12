@@ -215,10 +215,10 @@ void probe_cli(int src_port, int dst_port, char* dst_ip, int payload_size, int p
 	int packet_length = payload_size + 1;
 	char **high_entrophy_packet_train = malloc(packet_train_length * sizeof(char*));
 	char **low_entrophy_packet_train = malloc(packet_train_length * sizeof(char*));
+	unsigned short id_num = 0;
 	for (int i = 0; i < packet_train_length; i++) {
 		// Create ID
-		int id_num = i + 1;
-		char hold_num[5];
+		char hold_num[:];
 		sprintf(hold_num, "%04d", id_num);
 		
 		high_entrophy_packet_train[i] = malloc(packet_length * sizeof(char));
@@ -238,6 +238,7 @@ void probe_cli(int src_port, int dst_port, char* dst_ip, int payload_size, int p
 
 		high_entrophy_packet_train[i][packet_length - 1] = '\0';
 		low_entrophy_packet_train[i][packet_length - 1] = '\0';
+		++id_num;
 	}
 
 	// Send message to server to indicate next packet will be start of Low Entrophy
