@@ -215,7 +215,7 @@ struct config* pre_probe_server(int tcp_port, int *count) {
 /* Function for probing phase of server 
  * Returns compression results found
 */
-int probe_serv(int port) {
+int probe_serv(int port, int packet_size, int packet_train_length, int imt) {
     int sockfd, len, rcvd; 
     char buffer[MAXLINE]; 
     struct sockaddr_in servaddr, cliaddr; 
@@ -250,6 +250,7 @@ int probe_serv(int port) {
 	// Variables to hold times of start and end of packet trains
 	long low_start;
 	long low_end;
+	int packet_length = packet_size / sizeof(short);
 
 	// Set start and end messages for low entrophy trains
 	/*
@@ -280,12 +281,15 @@ int probe_serv(int port) {
 	// Keep receiving packets until end_msg is received
 	// while (strcmp(buffer, end_msg) != 0) {
 	int packet_id = 0;
-	while (true) {
-		rcvd = recvfrom(sockfd, (high_entrophy_packet_train + (i * packet_length)), sizeof((high_entrophy_packet_train + (i * packet_length)))
+	while (1) {
+		rcvd = recvfrom(sockfd, (high_entrophy_packet_train + (packet_id * packet_length)), sizeof((high_entrophy_packet_train + (packet_id * packet_length))),
 					MSG_WAITALL, (SA*) &cliaddr, 
 					&len); 
 		buffer[rcvd] = '\0';
 		packet_id++;
+		if (packet_id == 10) {
+			return EXIT_FAILURE;
+		}
 	}
 
 	// Get end time
@@ -296,6 +300,7 @@ int probe_serv(int port) {
 	long high_start;
 	long high_end;
 	// Set start and end msg for high entrophy train
+	/*
 	strcpy(start_msg, "Start HIGH UDP Train");
 	strcpy(end_msg, "End HIGH UDP Train");
 
@@ -307,22 +312,27 @@ int probe_serv(int port) {
 					&len); 
 		buffer[rcvd] = '\0';
 	}
+	*/
 
 	// Send message back to client to let it know it is ready
+	/*
 	sendto(sockfd, start_msg, strlen(start_msg),
 			MSG_CONFIRM, (SA*) &cliaddr,
 			sizeof(cliaddr));
+	*/
 
 	// Get start time
 	high_start = getMsTime();
 
 	// Keep receiving packets until end_msg is received
+	/*
 	while (strcmp(buffer, end_msg) != 0) {
 		rcvd = recvfrom(sockfd, (char *)buffer, MAXLINE,  
 					MSG_WAITALL, (SA*) &cliaddr, 
 					&len); 
 		buffer[rcvd] = '\0';
 	}
+	*/
 	
 	// Get end time for high entrophy time
 	high_end = getMsTime();
@@ -414,7 +424,10 @@ int main(int argc, char** argv) {
 	int client_settings_count = 0;
 	struct config* client_config_settings = pre_probe_server(	atoi(get_value(config_settings, "tcp_prepost_port", settings_count)),
 																&client_settings_count);
-	int compression_result = probe_serv(atoi(get_value(client_config_settings, "udp_dest_port", client_settings_count)));
+	int compression_result = probe_serv(atoi(get_value(client_config_settings, "udp_dest_port", client_settings_count)),
+										atoi(get_value(client_config_settings, "udp_payload_size", client_settings_count)),
+										atoi(get_value(client_config_settings, "packet_train_length", client_settings_count)),
+										atoi(get_value(client_config_settings, "imt", client_settings_count)));
 	post_probe_serv(compression_result, atoi(get_value(client_config_settings, "tcp_prepost_port", client_settings_count)));
 	return 0;
 }
