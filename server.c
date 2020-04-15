@@ -252,6 +252,7 @@ int probe_serv(int port) {
 	long low_end;
 
 	// Set start and end messages for low entrophy trains
+	/*
 	char* start_msg = malloc(256);
 	strcpy(start_msg, "Start LOW UDP Train");
 	char* end_msg = malloc(256);
@@ -269,16 +270,22 @@ int probe_serv(int port) {
 	sendto(sockfd, start_msg, strlen(start_msg),
 			MSG_CONFIRM, (SA*) &cliaddr,
 			sizeof(cliaddr));
+	*/
 
 	// Get start time
 	low_start = getMsTime();
 
+	short *high_entrophy_packet_train = (short *)malloc(packet_train_length * packet_length * sizeof(short));
+	short *low_entrophy_packet_train = (short *)malloc(packet_train_length * packet_length * sizeof(short));
 	// Keep receiving packets until end_msg is received
-	while (strcmp(buffer, end_msg) != 0) {
-		rcvd = recvfrom(sockfd, (char *)buffer, MAXLINE,  
+	// while (strcmp(buffer, end_msg) != 0) {
+	int packet_id = 0;
+	while (true) {
+		rcvd = recvfrom(sockfd, (high_entrophy_packet_train + (i * packet_length)), sizeof((high_entrophy_packet_train + (i * packet_length)))
 					MSG_WAITALL, (SA*) &cliaddr, 
 					&len); 
 		buffer[rcvd] = '\0';
+		packet_id++;
 	}
 
 	// Get end time

@@ -8,6 +8,7 @@
 #include <netinet/in.h> 
 #include <time.h>
 #include <netdb.h> 
+#include <fcntl.h>
 
 #define MAXLINE  6000	
 #define MAX 	 80
@@ -175,7 +176,7 @@ void pre_probe_cli(int tcp_port, char* dst_ip, char* filename) {
 	close(sockfd); 
 }
 
-void probe_cli(int src_port, int dst_port, char* dst_ip, int payload_size, int packet_train_length, int imt) {
+void probe_cli(int src_port, int dst_port, char* dst_ip, int packet_size, int packet_train_length, int imt) {
     int sockfd, rcvd_msg; 
     char buffer[MAXLINE]; 
     struct sockaddr_in servaddr, cliaddr; 
@@ -212,13 +213,14 @@ void probe_cli(int src_port, int dst_port, char* dst_ip, int payload_size, int p
 	srand(time(0));	
 
 
-	int packet_length = payload_size + 1;
+	int packet_length = packet_size / sizeof(short);
+	/*
 	char **high_entrophy_packet_train = malloc(packet_train_length * sizeof(char*));
 	char **low_entrophy_packet_train = malloc(packet_train_length * sizeof(char*));
 	unsigned short id_num = 0;
 	for (int i = 0; i < packet_train_length; i++) {
 		// Create ID
-		char hold_num[:];
+		char hold_num[5];
 		sprintf(hold_num, "%04d", id_num);
 		
 		high_entrophy_packet_train[i] = malloc(packet_length * sizeof(char));
@@ -240,10 +242,35 @@ void probe_cli(int src_port, int dst_port, char* dst_ip, int payload_size, int p
 		low_entrophy_packet_train[i][packet_length - 1] = '\0';
 		++id_num;
 	}
+	*/
+
+	printf("Hit\n");
+	printf("Hit\n");
+
+	short *high_entrophy_packet_train = (short *)malloc(packet_train_length * packet_length * sizeof(short));
+	short *low_entrophy_packet_train = (short *)malloc(packet_train_length * packet_length * sizeof(short));
+
+	unsigned short id_num = 0;
+	int myFile = open("/dev/urandom", O_RDONLY);            
+	for (int i = 0; i < packet_train_length; i++) {
+		for (int j = 0; j < packet_length; j++) {
+			if (j == 0) {
+				*(low_entrophy_packet_train + (i * packet_length) + j) = id_num;
+				*(high_entrophy_packet_train + (i * packet_length) + j) = id_num;
+			} else {
+				unsigned short rand;            
+				read(myFile, &rand, sizeof(rand)) ;
+				*(high_entrophy_packet_train + (i * packet_length) + j) = rand;
+			}
+		}
+		++id_num;
+	}
+	printf("MadeIt\n");
 
 	// Send message to server to indicate next packet will be start of Low Entrophy
 	// packet train. Let's server know to start timer
 	// Ensures the server gets the message. 
+	/*
 	char* start_msg = malloc(256);
 	strcpy(start_msg, "Start LOW UDP Train");
 	int len = sizeof(servaddr);
@@ -256,14 +283,18 @@ void probe_cli(int src_port, int dst_port, char* dst_ip, int payload_size, int p
 							&len);
 		buffer[rcvd_msg] = '\0';
 	}
+	*/
 
+	int array[100];
 	// Sending Low Entrophy Packet Train
 	for (int i = 0; i < packet_train_length; i++) {
-		sendto(sockfd, (const char *)low_entrophy_packet_train[i], strlen(low_entrophy_packet_train[i]), 
+		sendto(sockfd, (low_entrophy_packet_train + (i * packet_length)), sizeof((low_entrophy_packet_train + (i * packet_length))), 
+		// sendto(sockfd, array, sizeof(array), 
 				MSG_CONFIRM, (const SA*) &servaddr,  
 				sizeof(servaddr)); 
 	}
 
+	/*
 	// Message to send to server to stop recording time
 	char* end_msg = malloc(256); 
 	strcpy(end_msg, "End LOW UDP Train");
@@ -272,9 +303,11 @@ void probe_cli(int src_port, int dst_port, char* dst_ip, int payload_size, int p
 			MSG_CONFIRM, (const SA*) &servaddr,  
 			sizeof(servaddr)); 
 
+	*/
 	// Sleep for 15 seconds inbetween trains
 	sleep(imt);
 	
+	/*
 	// Prepare to send High UDP Train
 	strcpy(start_msg, "Start HIGH UDP Train");
 	len = sizeof(servaddr);
@@ -287,20 +320,23 @@ void probe_cli(int src_port, int dst_port, char* dst_ip, int payload_size, int p
 							&len);
 		buffer[rcvd_msg] = '\0';
 	}
+	*/
 
 	// Sending High Entrophy Packet Train
 	for (int i = 0; i < packet_train_length; i++) {
-		sendto(sockfd, (const char *)high_entrophy_packet_train[i], strlen(high_entrophy_packet_train[i]), 
+		sendto(sockfd, (high_entrophy_packet_train + (i * packet_length)), sizeof((high_entrophy_packet_train + (i * packet_length))), 
 				MSG_CONFIRM, (const SA*) &servaddr,  
 				sizeof(servaddr)); 
 	}
 
+	/*
 	// Message to send to server to stop recording time
 	strcpy(end_msg, "End HIGH UDP Train");
 	// Ensures the server gets the message. 
 	sendto(sockfd, end_msg, strlen(end_msg), 
 			MSG_CONFIRM, (const SA*) &servaddr,  
 			sizeof(servaddr)); 
+	*/
 
 	// Close socket when done
     close(sockfd); 
