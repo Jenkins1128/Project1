@@ -207,6 +207,7 @@ struct config* pre_probe_server(int tcp_port, int *count) {
 	populate_config(config_settings, filename);
 
 	// After receiving file, close the socket 
+	close(connfd);
 	close(sockfd); 
 
 	return config_settings;
