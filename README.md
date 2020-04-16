@@ -6,8 +6,24 @@ Malik Owens and Isaiah Jenkins
 
 ##### On the client system
 
+Compile:
+
+gcc -o compdetect_client compdetect_client.c
+
+Run:
+
+sudo ./compdetect_client myconfig.json
 
 ##### On the server system
+
+
+Compile:
+
+gcc -o compdetect_server compdetect_server.c
+
+Run:
+
+sudo ./compdetect_server myconfig.json
 
 
 ## Compression Detection Standalone Application
