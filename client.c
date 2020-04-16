@@ -209,72 +209,16 @@ void probe_cli(int src_port, int dst_port, char* dst_ip, int packet_size, int pa
 		exit(EXIT_FAILURE);
 	}
 
-
-
-	/*
-	 
-	// Needed for random seed
-	srand(time(0));	
-
-	char **high_entrophy_packet_train = malloc(packet_train_length * sizeof(char*));
-	char **low_entrophy_packet_train = malloc(packet_train_length * sizeof(char*));
-	unsigned short id_num = 0;
-	for (int i = 0; i < packet_train_length; i++) {
-		// Create ID
-		char hold_num[5];
-		sprintf(hold_num, "%04d", id_num);
-		
-		high_entrophy_packet_train[i] = malloc(packet_length * sizeof(char));
-		low_entrophy_packet_train[i] = malloc(packet_length * sizeof(char));
-		for (int j = 0; j < packet_length - 1; j++) {
-			if (j < 4) {
-				high_entrophy_packet_train[i][j] = hold_num[j];
-				low_entrophy_packet_train[i][j] = hold_num[j];
-			} else {
-				int rand_num = rand() % packet_length;
-				char hold_rand_num[2];
-				sprintf(hold_rand_num, "%d", rand_num);
-				high_entrophy_packet_train[i][j] = hold_rand_num[0]; // All rand nums
-				low_entrophy_packet_train[i][j] = '0';
-			}
-		}
-
-		high_entrophy_packet_train[i][packet_length - 1] = '\0';
-		low_entrophy_packet_train[i][packet_length - 1] = '\0';
-		++id_num;
-	}
-	*/
-
-	/*
-	printf("Hit\n");
-	printf("Hit\n");
-
-	short *high_entrophy_packet_train = (short *)malloc(packet_train_length * packet_length * sizeof(short));
-	short *low_entrophy_packet_train = (short *)malloc(packet_train_length * packet_length * sizeof(short));
-
-	unsigned short id_num = 0;
-	int myFile = open("/dev/urandom", O_RDONLY);            
-	for (int i = 0; i < packet_train_length; i++) {
-		for (int j = 0; j < packet_length; j++) {
-			if (j == 0) {
-				*(low_entrophy_packet_train + (i * packet_length) + j) = id_num;
-				*(high_entrophy_packet_train + (i * packet_length) + j) = id_num;
-			} else {
-				unsigned short rand;            
-				read(myFile, &rand, sizeof(rand)) ;
-				*(high_entrophy_packet_train + (i * packet_length) + j) = rand;
-			}
-		}
-		++id_num;
-	}
-	*/
-
+	// Packet Length should have bytes equal to packet length, so divide by the size of short
 	int packet_length = packet_size / sizeof(uint16_t);
 
+	// Create payload data structures
 	uint16_t *high_entrophy_packet_train = (uint16_t *)malloc(packet_train_length * packet_length * sizeof(uint16_t));
 	uint16_t *low_entrophy_packet_train = (uint16_t *)malloc(packet_train_length * packet_length * sizeof(uint16_t));
 
-	unsigned short id_num = 5000;
+	// Create payload data
+	// When creating the data, go ahead and turn host to byte order
+	unsigned short id_num = 0;
 	int myFile = open("/dev/urandom", O_RDONLY);            
 	for (int i = 0; i < packet_train_length; i++) {
 		for (int j = 0; j < packet_length; j++) {
@@ -283,7 +227,7 @@ void probe_cli(int src_port, int dst_port, char* dst_ip, int packet_size, int pa
 				*(high_entrophy_packet_train + (i * packet_length) + j) = htons(id_num);
 			} else {
 				unsigned short rand;            
-				read(myFile, &rand, sizeof(rand)) ;
+				read(myFile, &rand, sizeof(rand));
 				*(high_entrophy_packet_train + (i * packet_length) + j) = htons(rand);
 			}
 		}
@@ -291,80 +235,29 @@ void probe_cli(int src_port, int dst_port, char* dst_ip, int packet_size, int pa
 	}
 	close(myFile);
 
-	// Send message to server to indicate next packet will be start of Low Entrophy
-	// packet train. Let's server know to start timer
-	// Ensures the server gets the message. 
-	/*
-	char* start_msg = malloc(256);
-	strcpy(start_msg, "Start LOW UDP Train");
-	int len = sizeof(servaddr);
-	while (strcmp(start_msg, buffer) != 0) {
-		sendto(sockfd, start_msg, strlen(start_msg), 
-				MSG_CONFIRM, (const SA*) &servaddr,  
-				sizeof(servaddr)); 
-		rcvd_msg = recvfrom(sockfd, (char *)buffer, MAXLINE,
-							MSG_DONTWAIT, ( struct sockaddr *)&servaddr,
-							&len);
-		buffer[rcvd_msg] = '\0';
-	}
-	*/
-
 	// Sending Low Entrophy Packet Train
 	for (int i = 0; i < packet_train_length; i++) {
-		// sendto(sockfd, (low_entrophy_packet_train + (i * packet_length)), sizeof((low_entrophy_packet_train + (i * packet_length))), 
-		// sendto(sockfd, array, sizeof(array), 
     	sendto(sockfd, (low_entrophy_packet_train + (i * packet_length)), sizeof(uint16_t) * packet_length, 
 				MSG_CONFIRM, (const SA*) &servaddr,  
 				sizeof(servaddr)); 
 	}
 
-	/*
-	// Message to send to server to stop recording time
-	char* end_msg = malloc(256); 
-	strcpy(end_msg, "End LOW UDP Train");
-	// Ensures the server gets the message. 
-	sendto(sockfd, end_msg, strlen(end_msg), 
-			MSG_CONFIRM, (const SA*) &servaddr,  
-			sizeof(servaddr)); 
-
-	*/
 	// Sleep for 15 seconds inbetween trains
 	sleep(imt);
-	
-	/*
-	// Prepare to send High UDP Train
-	strcpy(start_msg, "Start HIGH UDP Train");
-	len = sizeof(servaddr);
-	while (strcmp(start_msg, buffer) != 0) {
-		sendto(sockfd, start_msg, strlen(start_msg), 
-				MSG_CONFIRM, (const SA*) &servaddr,  
-				sizeof(servaddr)); 
-		rcvd_msg = recvfrom(sockfd, (char *)buffer, MAXLINE,
-							MSG_DONTWAIT, (SA*)&servaddr,
-							&len);
-		buffer[rcvd_msg] = '\0';
-	}
-	*/
 
 	// Sending High Entrophy Packet Train
 	for (int i = 0; i < packet_train_length; i++) {
-		// sendto(sockfd, (high_entrophy_packet_train + (i * packet_length)), sizeof((high_entrophy_packet_train + (i * packet_length))), 
     	sendto(sockfd, (high_entrophy_packet_train + (i * packet_length)), sizeof(uint16_t) * packet_length, 
 				MSG_CONFIRM, (const SA*) &servaddr,  
 				sizeof(servaddr)); 
 	}
 
-	/*
-	// Message to send to server to stop recording time
-	strcpy(end_msg, "End HIGH UDP Train");
-	// Ensures the server gets the message. 
-	sendto(sockfd, end_msg, strlen(end_msg), 
-			MSG_CONFIRM, (const SA*) &servaddr,  
-			sizeof(servaddr)); 
-	*/
-
 	// Close socket when done
     close(sockfd); 
+
+	// Free payload data structures
+	free(high_entrophy_packet_train);
+	free(low_entrophy_packet_train);
 }
 
 void post_probe_cli(int tcp_port, char* dst_ip) {
@@ -426,5 +319,6 @@ int main(int argc, char** argv) {
 	sleep(1.5);
 	post_probe_cli(	atoi(get_value(config_settings, "tcp_prepost_port", settings_count)),
 					get_value(config_settings, "p1_server_ip", settings_count));
+	free(config_settings);
 	return 0;
 }

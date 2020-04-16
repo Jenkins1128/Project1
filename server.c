@@ -255,21 +255,30 @@ int probe_serv(int port, int packet_size, int packet_train_length, int imt) {
 	long high_end;
 	int packet_length = packet_size / sizeof(uint16_t);
 
+	// Payload data structures
 	uint16_t *high_entrophy_packet_train = (uint16_t *)malloc(packet_train_length * packet_length * sizeof(uint16_t));
 	uint16_t *low_entrophy_packet_train = (uint16_t *)malloc(packet_train_length * packet_length * sizeof(uint16_t));
 
 	int packet_id = 0;
+
+	// Receive the first packet and wait for it.
 	rcvd = recvfrom(sockfd, (low_entrophy_packet_train + (packet_id * packet_length)), sizeof((low_entrophy_packet_train + (packet_id * packet_length))),
 				MSG_WAITALL, (SA*) &cliaddr, 
 				&len); 
 	packet_id++;
+	// After getting the first packet, get the time
 	low_start = getMsTime();
+	// Update the end time whenever a new packet is received
 	low_end = getMsTime();
+
+	// While the most recent packet received wasn't more than 15s ago, keep attempting to receive packets
+	// keep attempting to receive
 	while ((getMsTime() - low_end) < ((imt * 1000) - 250)) {
 		rcvd = recvfrom(sockfd, (low_entrophy_packet_train + (packet_id * packet_length)), sizeof((low_entrophy_packet_train + (packet_id * packet_length))),
 					MSG_DONTWAIT, (SA*) &cliaddr, 
 					&len); 
 		if (rcvd > 0) {
+			// Only update the packet_id and update last packet received time
 			low_end = getMsTime();
 			packet_id++;
 		}
@@ -277,17 +286,23 @@ int probe_serv(int port, int packet_size, int packet_train_length, int imt) {
 
 	/* High Packet Train */
 	packet_id = 0;
+	// Receive the first packet and wait for it.
 	rcvd = recvfrom(sockfd, (low_entrophy_packet_train + (packet_id * packet_length)), sizeof((low_entrophy_packet_train + (packet_id * packet_length))),
 				MSG_DONTWAIT, (SA*) &cliaddr, 
 				&len); 
 	packet_id++;
+	// After getting the first packet, get the time
 	high_start = getMsTime();
+	// Update the end time whenever a new packet is received
 	high_end = getMsTime();
+	// While the most recent packet received wasn't more than 15s ago, keep attempting to receive packets
+	// keep attempting to receive
 	while ((getMsTime() - high_end) < (imt * 1000) - 250) {
 		rcvd = recvfrom(sockfd, (low_entrophy_packet_train + (packet_id * packet_length)), sizeof((low_entrophy_packet_train + (packet_id * packet_length))),
 					MSG_DONTWAIT, (SA*) &cliaddr, 
 					&len); 
 		if (rcvd > 0) {
+			// Only update the packet_id and update last packet received time
 			high_end  = getMsTime();
 			packet_id++;
 		}
@@ -299,6 +314,10 @@ int probe_serv(int port, int packet_size, int packet_train_length, int imt) {
 	// Calculate elapsed time for high and low entrophy data
 	int low_entrophy_time = low_end - low_start;
 	int high_entrophy_time = high_end - high_start;
+
+	// Free after use
+	free(high_entrophy_packet_train);
+	free(low_entrophy_packet_train);
 
 	return (high_entrophy_time - low_entrophy_time);
 }
@@ -387,5 +406,6 @@ int main(int argc, char** argv) {
 										atoi(get_value(client_config_settings, "imt", client_settings_count)));
 	sleep(1.5);
 	post_probe_serv(compression_result, atoi(get_value(client_config_settings, "tcp_prepost_port", client_settings_count)));
+	free(client_config_settings);
 	return 0;
 }
