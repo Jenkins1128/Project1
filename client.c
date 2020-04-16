@@ -290,7 +290,6 @@ void probe_cli(int src_port, int dst_port, char* dst_ip, int packet_size, int pa
 		++id_num;
 	}
 	close(myFile);
-	printf("MadeIt\n");
 
 	// Send message to server to indicate next packet will be start of Low Entrophy
 	// packet train. Let's server know to start timer
@@ -417,12 +416,14 @@ int main(int argc, char** argv) {
 	pre_probe_cli(	atoi(get_value(config_settings, "tcp_prepost_port", settings_count)),
 					get_value(config_settings, "p1_server_ip", settings_count),
 					argv[1]);
+	sleep(1.5);
 	probe_cli(	atoi(get_value(config_settings, "udp_source_port", settings_count)), 
 				atoi(get_value(config_settings, "udp_dest_port", settings_count)),
 				get_value(config_settings, "p1_server_ip", settings_count),
 				atoi(get_value(config_settings, "udp_payload_size", settings_count)),
 				atoi(get_value(config_settings, "packet_train_length", settings_count)),
 				atoi(get_value(config_settings, "imt", settings_count)));
+	sleep(1.5);
 	post_probe_cli(	atoi(get_value(config_settings, "tcp_prepost_port", settings_count)),
 					get_value(config_settings, "p1_server_ip", settings_count));
 	return 0;

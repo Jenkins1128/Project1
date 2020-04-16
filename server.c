@@ -444,10 +444,12 @@ int main(int argc, char** argv) {
 	int client_settings_count = 0;
 	struct config* client_config_settings = pre_probe_server(	atoi(get_value(config_settings, "tcp_prepost_port", settings_count)),
 																&client_settings_count);
+	sleep(1.5);
 	int compression_result = probe_serv(atoi(get_value(client_config_settings, "udp_dest_port", client_settings_count)),
 										atoi(get_value(client_config_settings, "udp_payload_size", client_settings_count)),
 										atoi(get_value(client_config_settings, "packet_train_length", client_settings_count)),
 										atoi(get_value(client_config_settings, "imt", client_settings_count)));
+	sleep(1.5);
 	post_probe_serv(compression_result, atoi(get_value(client_config_settings, "tcp_prepost_port", client_settings_count)));
 	return 0;
 }
