@@ -250,7 +250,9 @@ int probe_serv(int port, int packet_size, int packet_train_length, int imt) {
 	// Variables to hold times of start and end of packet trains
 	long low_start;
 	long low_end;
-	int packet_length = packet_size / sizeof(short);
+	long high_start;
+	long high_end;
+	int packet_length = packet_size / sizeof(uint16_t);
 
 	// Set start and end messages for low entrophy trains
 	/*
@@ -274,31 +276,49 @@ int probe_serv(int port, int packet_size, int packet_train_length, int imt) {
 	*/
 
 	// Get start time
-	low_start = getMsTime();
 
-	short *high_entrophy_packet_train = (short *)malloc(packet_train_length * packet_length * sizeof(short));
-	short *low_entrophy_packet_train = (short *)malloc(packet_train_length * packet_length * sizeof(short));
+	uint16_t *high_entrophy_packet_train = (uint16_t *)malloc(packet_train_length * packet_length * sizeof(uint16_t));
+	uint16_t *low_entrophy_packet_train = (uint16_t *)malloc(packet_train_length * packet_length * sizeof(uint16_t));
 	// Keep receiving packets until end_msg is received
 	// while (strcmp(buffer, end_msg) != 0) {
 	int packet_id = 0;
-	while (1) {
-		rcvd = recvfrom(sockfd, (high_entrophy_packet_train + (packet_id * packet_length)), sizeof((high_entrophy_packet_train + (packet_id * packet_length))),
-					MSG_WAITALL, (SA*) &cliaddr, 
+	rcvd = recvfrom(sockfd, (low_entrophy_packet_train + (packet_id * packet_length)), sizeof((low_entrophy_packet_train + (packet_id * packet_length))),
+				MSG_WAITALL, (SA*) &cliaddr, 
+				&len); 
+	low_start = getMsTime();
+	while ((getMsTime() - low_end) > imt - 250) {
+		// rcvd = recvfrom(sockfd, (high_entrophy_packet_train + (packet_id * packet_length)), sizeof((high_entrophy_packet_train + (packet_id * packet_length))),
+		rcvd = recvfrom(sockfd, (low_entrophy_packet_train + (packet_id * packet_length)), sizeof((low_entrophy_packet_train + (packet_id * packet_length))),
+					MSG_DONTWAIT, (SA*) &cliaddr, 
 					&len); 
-		buffer[rcvd] = '\0';
 		packet_id++;
-		if (packet_id == 10) {
-			return EXIT_FAILURE;
+		if (rcvd > 0) {
+			low_end = getMsTime();
 		}
 	}
 
 	// Get end time
-	low_end = getMsTime();
+
+	// Keep receiving packets until end_msg is received
+	// while (strcmp(buffer, end_msg) != 0) {
+	packet_id = 0;
+	rcvd = recvfrom(sockfd, (low_entrophy_packet_train + (packet_id * packet_length)), sizeof((low_entrophy_packet_train + (packet_id * packet_length))),
+				MSG_DONTWAIT, (SA*) &cliaddr, 
+				&len); 
+	high_start = getMsTime();
+	while ((getMsTime() - high_end) > imt - 250) {
+		// rcvd = recvfrom(sockfd, (high_entrophy_packet_train + (packet_id * packet_length)), sizeof((high_entrophy_packet_train + (packet_id * packet_length))),
+		rcvd = recvfrom(sockfd, (low_entrophy_packet_train + (packet_id * packet_length)), sizeof((low_entrophy_packet_train + (packet_id * packet_length))),
+					MSG_DONTWAIT, (SA*) &cliaddr, 
+					&len); 
+		packet_id++;
+		if (rcvd > 0) {
+			high_end  = getMsTime();
+		}
+	}
 
 
 	// Variables for high entrophy start/end time
-	long high_start;
-	long high_end;
 	// Set start and end msg for high entrophy train
 	/*
 	strcpy(start_msg, "Start HIGH UDP Train");

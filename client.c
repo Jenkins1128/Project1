@@ -209,12 +209,13 @@ void probe_cli(int src_port, int dst_port, char* dst_ip, int packet_size, int pa
 		exit(EXIT_FAILURE);
 	}
 
+
+
+	/*
+	 
 	// Needed for random seed
 	srand(time(0));	
 
-
-	int packet_length = packet_size / sizeof(short);
-	/*
 	char **high_entrophy_packet_train = malloc(packet_train_length * sizeof(char*));
 	char **low_entrophy_packet_train = malloc(packet_train_length * sizeof(char*));
 	unsigned short id_num = 0;
@@ -244,6 +245,7 @@ void probe_cli(int src_port, int dst_port, char* dst_ip, int packet_size, int pa
 	}
 	*/
 
+	/*
 	printf("Hit\n");
 	printf("Hit\n");
 
@@ -265,6 +267,29 @@ void probe_cli(int src_port, int dst_port, char* dst_ip, int packet_size, int pa
 		}
 		++id_num;
 	}
+	*/
+
+	int packet_length = packet_size / sizeof(uint16_t);
+
+	uint16_t *high_entrophy_packet_train = (uint16_t *)malloc(packet_train_length * packet_length * sizeof(uint16_t));
+	uint16_t *low_entrophy_packet_train = (uint16_t *)malloc(packet_train_length * packet_length * sizeof(uint16_t));
+
+	unsigned short id_num = 5000;
+	int myFile = open("/dev/urandom", O_RDONLY);            
+	for (int i = 0; i < packet_train_length; i++) {
+		for (int j = 0; j < packet_length; j++) {
+			if (j == 0) {
+				*(low_entrophy_packet_train + (i * packet_length) + j) = htons(id_num);
+				*(high_entrophy_packet_train + (i * packet_length) + j) = htons(id_num);
+			} else {
+				unsigned short rand;            
+				read(myFile, &rand, sizeof(rand)) ;
+				*(high_entrophy_packet_train + (i * packet_length) + j) = htons(rand);
+			}
+		}
+		++id_num;
+	}
+	close(myFile);
 	printf("MadeIt\n");
 
 	// Send message to server to indicate next packet will be start of Low Entrophy
@@ -285,11 +310,11 @@ void probe_cli(int src_port, int dst_port, char* dst_ip, int packet_size, int pa
 	}
 	*/
 
-	int array[100];
 	// Sending Low Entrophy Packet Train
 	for (int i = 0; i < packet_train_length; i++) {
-		sendto(sockfd, (low_entrophy_packet_train + (i * packet_length)), sizeof((low_entrophy_packet_train + (i * packet_length))), 
+		// sendto(sockfd, (low_entrophy_packet_train + (i * packet_length)), sizeof((low_entrophy_packet_train + (i * packet_length))), 
 		// sendto(sockfd, array, sizeof(array), 
+    	sendto(sockfd, (low_entrophy_packet_train + (i * packet_length)), sizeof(uint16_t) * packet_length, 
 				MSG_CONFIRM, (const SA*) &servaddr,  
 				sizeof(servaddr)); 
 	}
@@ -324,7 +349,8 @@ void probe_cli(int src_port, int dst_port, char* dst_ip, int packet_size, int pa
 
 	// Sending High Entrophy Packet Train
 	for (int i = 0; i < packet_train_length; i++) {
-		sendto(sockfd, (high_entrophy_packet_train + (i * packet_length)), sizeof((high_entrophy_packet_train + (i * packet_length))), 
+		// sendto(sockfd, (high_entrophy_packet_train + (i * packet_length)), sizeof((high_entrophy_packet_train + (i * packet_length))), 
+    	sendto(sockfd, (high_entrophy_packet_train + (i * packet_length)), sizeof(uint16_t) * packet_length, 
 				MSG_CONFIRM, (const SA*) &servaddr,  
 				sizeof(servaddr)); 
 	}
