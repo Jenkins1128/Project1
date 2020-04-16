@@ -4,7 +4,7 @@ Malik Owens and Isaiah Jenkins
 
 ## Compression Detection Client/Server Application
 
-##### On the client system
+### On the client system
 
 Compile:
 
@@ -14,7 +14,7 @@ Run:
 
 sudo ./compdetect_client myconfig.json
 
-##### On the server system
+### On the server system
 
 
 Compile:
