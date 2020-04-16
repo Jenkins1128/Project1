@@ -255,108 +255,43 @@ int probe_serv(int port, int packet_size, int packet_train_length, int imt) {
 	long high_end;
 	int packet_length = packet_size / sizeof(uint16_t);
 
-	// Set start and end messages for low entrophy trains
-	/*
-	char* start_msg = malloc(256);
-	strcpy(start_msg, "Start LOW UDP Train");
-	char* end_msg = malloc(256);
-	strcpy(end_msg, "End LOW UDP Train");
-
-	// Wait for server to receive start_msg from client, then continue
-	while (strcmp(buffer, start_msg) != 0) {
-		rcvd = recvfrom(sockfd, (char *)buffer, MAXLINE,  
-					MSG_WAITALL, (SA*) &cliaddr, 
-					&len); 
-		buffer[rcvd] = '\0';
-	}
-	
-	// Send msg to client to let it know to start sending packet train 
-	sendto(sockfd, start_msg, strlen(start_msg),
-			MSG_CONFIRM, (SA*) &cliaddr,
-			sizeof(cliaddr));
-	*/
-
-	// Get start time
-
 	uint16_t *high_entrophy_packet_train = (uint16_t *)malloc(packet_train_length * packet_length * sizeof(uint16_t));
 	uint16_t *low_entrophy_packet_train = (uint16_t *)malloc(packet_train_length * packet_length * sizeof(uint16_t));
-	// Keep receiving packets until end_msg is received
-	// while (strcmp(buffer, end_msg) != 0) {
+
 	int packet_id = 0;
 	rcvd = recvfrom(sockfd, (low_entrophy_packet_train + (packet_id * packet_length)), sizeof((low_entrophy_packet_train + (packet_id * packet_length))),
 				MSG_WAITALL, (SA*) &cliaddr, 
 				&len); 
+	packet_id++;
 	low_start = getMsTime();
-	while ((getMsTime() - low_end) > imt - 250) {
-		// rcvd = recvfrom(sockfd, (high_entrophy_packet_train + (packet_id * packet_length)), sizeof((high_entrophy_packet_train + (packet_id * packet_length))),
+	low_end = getMsTime();
+	while ((getMsTime() - low_end) < ((imt * 1000) - 250)) {
 		rcvd = recvfrom(sockfd, (low_entrophy_packet_train + (packet_id * packet_length)), sizeof((low_entrophy_packet_train + (packet_id * packet_length))),
 					MSG_DONTWAIT, (SA*) &cliaddr, 
 					&len); 
-		packet_id++;
 		if (rcvd > 0) {
 			low_end = getMsTime();
+			packet_id++;
 		}
 	}
 
-	// Get end time
-
-	// Keep receiving packets until end_msg is received
-	// while (strcmp(buffer, end_msg) != 0) {
+	/* High Packet Train */
 	packet_id = 0;
 	rcvd = recvfrom(sockfd, (low_entrophy_packet_train + (packet_id * packet_length)), sizeof((low_entrophy_packet_train + (packet_id * packet_length))),
 				MSG_DONTWAIT, (SA*) &cliaddr, 
 				&len); 
+	packet_id++;
 	high_start = getMsTime();
-	while ((getMsTime() - high_end) > imt - 250) {
-		// rcvd = recvfrom(sockfd, (high_entrophy_packet_train + (packet_id * packet_length)), sizeof((high_entrophy_packet_train + (packet_id * packet_length))),
+	high_end = getMsTime();
+	while ((getMsTime() - high_end) < (imt * 1000) - 250) {
 		rcvd = recvfrom(sockfd, (low_entrophy_packet_train + (packet_id * packet_length)), sizeof((low_entrophy_packet_train + (packet_id * packet_length))),
 					MSG_DONTWAIT, (SA*) &cliaddr, 
 					&len); 
-		packet_id++;
 		if (rcvd > 0) {
 			high_end  = getMsTime();
+			packet_id++;
 		}
 	}
-
-
-	// Variables for high entrophy start/end time
-	// Set start and end msg for high entrophy train
-	/*
-	strcpy(start_msg, "Start HIGH UDP Train");
-	strcpy(end_msg, "End HIGH UDP Train");
-
-	// Wait for client to send start msg 
-	// to let server know packet train coming next
-	while (strcmp(buffer, start_msg) != 0) {
-		rcvd = recvfrom(sockfd, (char *)buffer, MAXLINE,  
-					MSG_WAITALL, (SA*) &cliaddr, 
-					&len); 
-		buffer[rcvd] = '\0';
-	}
-	*/
-
-	// Send message back to client to let it know it is ready
-	/*
-	sendto(sockfd, start_msg, strlen(start_msg),
-			MSG_CONFIRM, (SA*) &cliaddr,
-			sizeof(cliaddr));
-	*/
-
-	// Get start time
-	high_start = getMsTime();
-
-	// Keep receiving packets until end_msg is received
-	/*
-	while (strcmp(buffer, end_msg) != 0) {
-		rcvd = recvfrom(sockfd, (char *)buffer, MAXLINE,  
-					MSG_WAITALL, (SA*) &cliaddr, 
-					&len); 
-		buffer[rcvd] = '\0';
-	}
-	*/
-	
-	// Get end time for high entrophy time
-	high_end = getMsTime();
 
 	// Close socket once done
     close(sockfd); 
