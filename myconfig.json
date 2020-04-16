@@ -6,7 +6,7 @@ udp_dest_port:8765
 tcp_source_port:8755
 tcp_dest_head_port:9094
 tcp_dest_tail_port:9095
-tcp_prepost_port:8086
+tcp_prepost_port:8080
 udp_payload_size:1000
 imt:15
 packet_train_length:6000
