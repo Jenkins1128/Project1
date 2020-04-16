@@ -114,6 +114,7 @@ void recvFile(int sockfd) {
 	
 	// Close file pointer after writing to the file
 	fclose(fp);
+	return;
 } 
 
 /* Function used to send file */
@@ -137,6 +138,7 @@ void sentFile(int sockfd, char* filename) {
 	
 	// Close file pointer after writing to the file
 	fclose(fp);					
+	return;
 } 
 
 /* Function used for handling pre-phobing phase */
@@ -174,6 +176,8 @@ void pre_probe_cli(int tcp_port, char* dst_ip, char* filename) {
 
 	// Close the socket 
 	close(sockfd); 
+
+	return;
 }
 
 void probe_cli(int src_port, int dst_port, char* dst_ip, int packet_size, int packet_train_length, int imt) {
@@ -258,6 +262,10 @@ void probe_cli(int src_port, int dst_port, char* dst_ip, int packet_size, int pa
 	// Free payload data structures
 	free(high_entrophy_packet_train);
 	free(low_entrophy_packet_train);
+
+	// Needed to wait for server to receive all udp packets
+	sleep(imt);
+	return;
 }
 
 void post_probe_cli(int tcp_port, char* dst_ip) {
@@ -292,6 +300,8 @@ void post_probe_cli(int tcp_port, char* dst_ip) {
 	
     // Close the socket when done
     close(sockfd); 
+
+	return;
 }
 
 int main(int argc, char** argv) { 

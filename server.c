@@ -139,6 +139,8 @@ void sentFile(int sockfd) {
 	
 	// Close file pointer after writing to the file
 	fclose(fp);					
+
+	return;
 } 
 
 /* Function to get current time in ms */
@@ -259,6 +261,7 @@ int probe_serv(int port, int packet_size, int packet_train_length, int imt) {
 	uint16_t *high_entrophy_packet_train = (uint16_t *)malloc(packet_train_length * packet_length * sizeof(uint16_t));
 	uint16_t *low_entrophy_packet_train = (uint16_t *)malloc(packet_train_length * packet_length * sizeof(uint16_t));
 
+	/* Start Low Packet Train */
 	int packet_id = 0;
 
 	// Receive the first packet and wait for it.
@@ -283,11 +286,12 @@ int probe_serv(int port, int packet_size, int packet_train_length, int imt) {
 			packet_id++;
 		}
 	}
+	/* End Low Packet Train */
 
-	/* High Packet Train */
+	/* Start High Packet Train */
 	packet_id = 0;
 	// Receive the first packet and wait for it.
-	rcvd = recvfrom(sockfd, (low_entrophy_packet_train + (packet_id * packet_length)), sizeof((low_entrophy_packet_train + (packet_id * packet_length))),
+	rcvd = recvfrom(sockfd, (high_entrophy_packet_train + (packet_id * packet_length)), sizeof((high_entrophy_packet_train + (packet_id * packet_length))),
 				MSG_DONTWAIT, (SA*) &cliaddr, 
 				&len); 
 	packet_id++;
@@ -298,7 +302,7 @@ int probe_serv(int port, int packet_size, int packet_train_length, int imt) {
 	// While the most recent packet received wasn't more than 15s ago, keep attempting to receive packets
 	// keep attempting to receive
 	while ((getMsTime() - high_end) < (imt * 1000) - 250) {
-		rcvd = recvfrom(sockfd, (low_entrophy_packet_train + (packet_id * packet_length)), sizeof((low_entrophy_packet_train + (packet_id * packet_length))),
+		rcvd = recvfrom(sockfd, (high_entrophy_packet_train + (packet_id * packet_length)), sizeof((high_entrophy_packet_train + (packet_id * packet_length))),
 					MSG_DONTWAIT, (SA*) &cliaddr, 
 					&len); 
 		if (rcvd > 0) {
@@ -307,6 +311,7 @@ int probe_serv(int port, int packet_size, int packet_train_length, int imt) {
 			packet_id++;
 		}
 	}
+	/* End High Packet Train */
 
 	// Close socket once done
     close(sockfd); 
@@ -381,6 +386,8 @@ void post_probe_serv(int compression_result, int tcp_port) {
     // Close sockets when done
 	close(connfd);
     close(sockfd); 
+
+	return;
 }
   
 // Driver code 
