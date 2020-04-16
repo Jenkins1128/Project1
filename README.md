@@ -28,7 +28,7 @@ sudo ./compdetect_server myconfig.json
 
 ## Compression Detection Standalone Application
 
-##### On any system (the standalone program)
+#### On any system (the standalone program)
 
 Compile:
 
